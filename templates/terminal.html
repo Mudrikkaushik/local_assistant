@@ -1,0 +1,788 @@
+{% extends "base.html" %}
+
+{% block title %}Terminal Management - AI Assistant Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .terminal-container {
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: var(--shadow-card);
+        transition: all 0.4s ease;
+        margin-bottom: 40px;
+    }
+
+    .terminal-container:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
+        border-color: var(--border-secondary);
+    }
+
+    .terminal-header {
+        background: var(--accent-purple);
+        color: white;
+        padding: 32px 40px;
+        border-radius: 20px;
+        margin-bottom: 40px;
+        box-shadow: 0 15px 40px rgba(156, 39, 176, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .terminal-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(from 0deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        animation: rotate 20s linear infinite;
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+    }
+
+    .header-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 12px;
+        letter-spacing: -0.5px;
+    }
+
+    .header-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    .terminal-section {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-primary);
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 32px;
+        box-shadow: var(--shadow-card);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .terminal-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.02), transparent);
+        transition: left 0.8s ease;
+    }
+
+    .terminal-section:hover {
+        box-shadow: var(--shadow-hover);
+        border-color: var(--border-secondary);
+    }
+
+    .terminal-section:hover::before {
+        left: 100%;
+    }
+
+    .section-title {
+        color: var(--text-primary);
+        font-weight: 700;
+        font-size: 1.4rem;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .section-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--accent-blue);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.3rem;
+        box-shadow: 0 8px 24px rgba(79, 195, 247, 0.2);
+    }
+
+    .terminal-input {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-primary);
+        border-radius: 12px;
+        padding: 16px 20px;
+        font-size: 1rem;
+        font-family: 'Courier New', monospace;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-bottom: 20px;
+        color: var(--text-primary);
+    }
+
+    .terminal-input:focus {
+        border-color: #4fc3f7;
+        box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.1);
+        outline: none;
+        background: var(--bg-card);
+        transform: translateY(-1px);
+    }
+
+    .terminal-input::placeholder {
+        color: var(--text-muted);
+    }
+
+    .terminal-textarea {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-primary);
+        border-radius: 12px;
+        padding: 20px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        resize: vertical;
+        min-height: 160px;
+        width: 100%;
+        transition: all 0.3s ease;
+        color: var(--text-primary);
+    }
+
+    .terminal-textarea:focus {
+        border-color: #4fc3f7;
+        box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.1);
+        outline: none;
+        background: var(--bg-card);
+        transform: translateY(-1px);
+    }
+
+    .terminal-textarea::placeholder {
+        color: var(--text-muted);
+    }
+
+    .terminal-btn {
+        background: var(--accent-blue);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 14px 32px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: none;
+        letter-spacing: 0.3px;
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    .terminal-btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.6s ease;
+    }
+
+    .terminal-btn:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .terminal-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(79, 195, 247, 0.3);
+    }
+
+    .terminal-btn:active {
+        transform: translateY(0);
+    }
+
+    .terminal-btn.success {
+        background: var(--accent-green);
+    }
+
+    .terminal-btn.success:hover {
+        box-shadow: 0 10px 30px rgba(102, 187, 106, 0.3);
+    }
+
+    .terminal-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .status-message {
+        margin-top: 20px;
+        padding: 16px 20px;
+        border-radius: 12px;
+        font-weight: 500;
+        animation: slideIn 0.4s ease-out;
+        display: none;
+        position: relative;
+        z-index: 2;
+    }
+
+    .status-success {
+        background: linear-gradient(135deg, rgba(102, 187, 106, 0.15), rgba(76, 175, 80, 0.1));
+        border: 1px solid rgba(102, 187, 106, 0.3);
+        color: #66bb6a;
+    }
+
+    .status-error {
+        background: linear-gradient(135deg, rgba(244, 67, 54, 0.15), rgba(229, 115, 115, 0.1));
+        border: 1px solid rgba(244, 67, 54, 0.3);
+        color: #f44336;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-12px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .input-group {
+        position: relative;
+        margin-bottom: 24px;
+    }
+
+    .input-label {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--bg-secondary);
+        padding: 0 8px;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        pointer-events: none;
+        z-index: 3;
+    }
+
+    .terminal-input:focus + .input-label,
+    .terminal-input:not(:placeholder-shown) + .input-label {
+        top: 0;
+        font-size: 0.8rem;
+        color: #4fc3f7;
+        background: var(--bg-card);
+    }
+
+    .command-history {
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-primary);
+        border-radius: 12px;
+        padding: 24px;
+        margin-top: 24px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        max-height: 240px;
+        overflow-y: auto;
+        display: none;
+    }
+
+    .history-item {
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border-primary);
+        color: var(--text-secondary);
+    }
+
+    .history-item:last-child {
+        border-bottom: none;
+    }
+
+    .history-command {
+        color: #4fc3f7;
+        font-weight: 600;
+    }
+
+    .history-time {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        float: right;
+    }
+
+    .floating-particles {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: -1;
+    }
+
+    .particle {
+        position: absolute;
+        background: rgba(79, 195, 247, 0.1);
+        border-radius: 50%;
+        animation: float 8s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-24px) rotate(180deg); }
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+        margin-right: 10px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .quick-actions-section {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-primary);
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 32px;
+    }
+
+    .quick-action-btn {
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 12px;
+        padding: 16px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: var(--text-primary);
+        text-align: center;
+        width: 100%;
+        margin-bottom: 16px;
+    }
+
+    .quick-action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-card);
+        border-color: var(--border-secondary);
+        background: var(--bg-tertiary);
+        color: #4fc3f7;
+    }
+
+    .quick-action-btn i {
+        display: block;
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+        color: #4fc3f7;
+    }
+
+    @keyframes rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+        .terminal-container {
+            padding: 24px;
+        }
+        
+        .terminal-header {
+            padding: 24px;
+        }
+        
+        .header-title {
+            font-size: 1.8rem;
+        }
+        
+        .terminal-section {
+            padding: 24px;
+        }
+        
+        .terminal-input {
+            padding: 14px 16px;
+        }
+        
+        .terminal-textarea {
+            padding: 16px;
+            min-height: 120px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="floating-particles" id="particles"></div>
+
+<div class="container">
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <div class="header-content">
+                <h1 class="header-title">
+                    <i class="fas fa-terminal me-3"></i>
+                    Terminal Management
+                </h1>
+                <p class="header-subtitle">
+                    Professional command execution and automated file operations for enterprise productivity
+                </p>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Terminal Command Section -->
+            <div class="col-lg-6 mb-4">
+                <div class="terminal-section">
+                    <h3 class="section-title">
+                        <div class="section-icon">
+                            <i class="fas fa-terminal"></i>
+                        </div>
+                        Command Execution
+                    </h3>
+                    
+                    <form id="cmdForm">
+                        <div class="input-group">
+                            <input 
+                                type="text" 
+                                class="terminal-input" 
+                                id="cmdInput" 
+                                placeholder=" "
+                                autocomplete="off"
+                            >
+                            <label class="input-label">Enter command (e.g., echo "Hello Enterprise")</label>
+                        </div>
+                        
+                        <button type="submit" class="terminal-btn" id="runBtn">
+                            <i class="fas fa-play me-2"></i>Execute Command
+                        </button>
+                    </form>
+                    
+                    <div id="cmdStatus" class="status-message"></div>
+                    <div id="commandHistory" class="command-history"></div>
+                </div>
+            </div>
+
+            <!-- File Management Section -->
+            <div class="col-lg-6 mb-4">
+                <div class="terminal-section">
+                    <h3 class="section-title">
+                        <div class="section-icon">
+                            <i class="fas fa-file-code"></i>
+                        </div>
+                        File Operations
+                    </h3>
+                    
+                    <form id="writeForm">
+                        <div class="input-group">
+                            <input 
+                                type="text" 
+                                class="terminal-input" 
+                                id="filenameInput" 
+                                placeholder=" "
+                                autocomplete="off"
+                            >
+                            <label class="input-label">File name (e.g., script.py, config.json)</label>
+                        </div>
+                        
+                        <div class="input-group">
+                            <textarea 
+                                class="terminal-textarea" 
+                                id="contentInput" 
+                                placeholder="Enter your code, configuration, or content here..."
+                                rows="8"
+                            ></textarea>
+                        </div>
+                        
+                        <button type="submit" class="terminal-btn success" id="writeBtn">
+                            <i class="fas fa-save me-2"></i>Create & Deploy File
+                        </button>
+                    </form>
+                    
+                    <div id="writeStatus" class="status-message"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions-section">
+            <h3 class="section-title">
+                <div class="section-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                Quick Operations
+            </h3>
+            
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <button class="quick-action-btn" onclick="quickCommand('dir')">
+                        <i class="fas fa-folder-open"></i>
+                        List Directory
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="quick-action-btn" onclick="quickCommand('date')">
+                        <i class="fas fa-calendar-alt"></i>
+                        System Date
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="quick-action-btn" onclick="quickCommand('whoami')">
+                        <i class="fas fa-user-circle"></i>
+                        Current User
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="quick-action-btn" onclick="clearHistory()">
+                        <i class="fas fa-broom"></i>
+                        Clear History
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Create professional floating particles
+    function createParticles() {
+        const particleContainer = document.getElementById('particles');
+        for (let i = 0; i < 8; i++) {
+            const particle = document.createElement('div');
+            particle.classList.add('particle');
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.width = Math.random() * 8 + 4 + 'px';
+            particle.style.height = particle.style.width;
+            particle.style.animationDelay = Math.random() * 8 + 's';
+            particleContainer.appendChild(particle);
+        }
+    }
+    createParticles();
+
+    // Command history
+    let commandHistory = [];
+
+    // Handle command form submission
+    $('#cmdForm').on('submit', function(e) {
+        e.preventDefault();
+        const cmd = $('#cmdInput').val().trim();
+        
+        if (!cmd) return;
+        
+        executeCommand(cmd);
+    });
+
+    // Handle file form submission
+    $('#writeForm').on('submit', function(e) {
+        e.preventDefault();
+        const filename = $('#filenameInput').val().trim();
+        const content = $('#contentInput').val();
+        
+        if (!filename || !content) {
+            showStatus('writeStatus', 'error', 'Please provide both filename and content for file creation');
+            return;
+        }
+        
+        createFile(filename, content);
+    });
+
+    function executeCommand(cmd) {
+        const runBtn = $('#runBtn');
+        const originalText = runBtn.html();
+        
+        // Show professional loading state
+        runBtn.prop('disabled', true).html('<span class="loading-spinner"></span>Processing...');
+        
+        $.ajax({
+            url: '/run',
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            data: JSON.stringify({cmd: cmd}),
+            success: function(response) {
+                showStatus('cmdStatus', response.status, response.message);
+                addToHistory(cmd, response);
+                $('#cmdInput').val('').focus();
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON ? xhr.responseJSON.message : 'Command execution failed';
+                showStatus('cmdStatus', 'error', error);
+            },
+            complete: function() {
+                runBtn.prop('disabled', false).html(originalText);
+            }
+        });
+    }
+
+    function createFile(filename, content) {
+        const writeBtn = $('#writeBtn');
+        const originalText = writeBtn.html();
+        
+        // Show professional loading state
+        writeBtn.prop('disabled', true).html('<span class="loading-spinner"></span>Deploying...');
+        
+        $.ajax({
+            url: '/write',
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            data: JSON.stringify({filename: filename, content: content}),
+            success: function(response) {
+                showStatus('writeStatus', response.status, response.message);
+                if (response.status === 'success') {
+                    $('#filenameInput, #contentInput').val('');
+                    $('#filenameInput').focus();
+                }
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON ? xhr.responseJSON.message : 'File operation failed';
+                showStatus('writeStatus', 'error', error);
+            },
+            complete: function() {
+                writeBtn.prop('disabled', false).html(originalText);
+            }
+        });
+    }
+
+    function showStatus(elementId, status, message) {
+        const statusElement = $(`#${elementId}`);
+        const icon = status === 'success' ? 'check-circle' : 'exclamation-triangle';
+        
+        statusElement.removeClass('status-success status-error')
+                   .addClass(`status-${status}`)
+                   .html(`<i class="fas fa-${icon} me-2"></i>${message}`)
+                   .show();
+        
+        // Auto-hide after 6 seconds
+        setTimeout(() => {
+            statusElement.fadeOut();
+        }, 6000);
+    }
+
+    function addToHistory(command, response) {
+        commandHistory.unshift({
+            command: command,
+            timestamp: new Date().toLocaleTimeString(),
+            response: response
+        });
+        
+        if (commandHistory.length > 12) {
+            commandHistory = commandHistory.slice(0, 12);
+        }
+        
+        updateHistoryDisplay();
+    }
+
+    function updateHistoryDisplay() {
+        const historyContainer = $('#commandHistory');
+        if (commandHistory.length === 0) {
+            historyContainer.hide();
+            return;
+        }
+        
+        const historyHtml = commandHistory.map(item => 
+            `<div class="history-item">
+                <span class="history-command">$</span> ${item.command} 
+                <span class="history-time">${item.timestamp}</span>
+            </div>`
+        ).join('');
+        
+        historyContainer.html(historyHtml).show();
+    }
+
+    // Professional input label animations
+    $('.terminal-input').on('input blur', function() {
+        const $this = $(this);
+        const $label = $this.next('.input-label');
+        
+        if ($this.val() !== '') {
+            $label.addClass('active');
+        } else {
+            $label.removeClass('active');
+        }
+    });
+
+    // Quick command functions
+    window.quickCommand = function(cmd) {
+        $('#cmdInput').val(cmd);
+        executeCommand(cmd);
+    };
+
+    window.clearHistory = function() {
+        commandHistory = [];
+        updateHistoryDisplay();
+        showStatus('cmdStatus', 'success', 'Command history cleared successfully');
+    };
+
+    // Auto-resize textarea with enhanced styling
+    $('#contentInput').on('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.max(this.scrollHeight, 160) + 'px';
+    });
+
+    // Professional focus effects
+    $('.terminal-input, .terminal-textarea').focus(function() {
+        $(this).closest('.terminal-section').addClass('focused');
+    }).blur(function() {
+        $(this).closest('.terminal-section').removeClass('focused');
+    });
+
+    // Add professional hover effects to quick actions
+    $('.quick-action-btn').hover(
+        function() {
+            $(this).find('i').addClass('animate__animated animate__pulse');
+        },
+        function() {
+            $(this).find('i').removeClass('animate__animated animate__pulse');
+        }
+    );
+
+    // Enhanced keyboard shortcuts
+    $(document).keydown(function(e) {
+        // Ctrl + Enter to execute command
+        if (e.ctrlKey && e.which === 13) {
+            if ($('#cmdInput').is(':focus')) {
+                $('#cmdForm').submit();
+            } else if ($('#contentInput').is(':focus')) {
+                $('#writeForm').submit();
+            }
+        }
+        
+        // Escape to clear inputs
+        if (e.which === 27) {
+            $('.terminal-input, .terminal-textarea').blur();
+        }
+    });
+
+    // Focus on first input for better UX
+    $('#cmdInput').focus();
+
+    // Professional animations for sections
+    $('.terminal-section').each(function(index) {
+        $(this).css('animation-delay', (index * 0.1) + 's');
+        $(this).addClass('animate__animated animate__fadeInUp');
+    });
+});
+</script>
+{% endblock %} 

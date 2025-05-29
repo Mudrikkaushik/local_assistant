@@ -1,0 +1,611 @@
+{% extends "base.html" %}
+
+{% block title %}System Automation - AI Assistant Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .automation-hero {
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+        border: 1px solid var(--border-primary);
+        border-radius: 24px;
+        padding: 60px 40px;
+        margin-bottom: 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .automation-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(from 0deg, transparent, rgba(255, 193, 7, 0.1), transparent);
+        animation: rotate 25s linear infinite;
+        z-index: 1;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-title {
+        font-size: 2.8rem;
+        font-weight: 800;
+        margin-bottom: 16px;
+        letter-spacing: -0.5px;
+    }
+
+    .hero-subtitle {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        margin-bottom: 0;
+        line-height: 1.6;
+    }
+
+    .status-alert {
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 32px;
+        box-shadow: var(--shadow-card);
+        display: none;
+    }
+
+    .status-alert.alert-success {
+        background: linear-gradient(135deg, rgba(102, 187, 106, 0.15), rgba(76, 175, 80, 0.1));
+        border-color: rgba(102, 187, 106, 0.3);
+        color: #66bb6a;
+    }
+
+    .status-alert.alert-danger {
+        background: linear-gradient(135deg, rgba(244, 67, 54, 0.15), rgba(229, 115, 115, 0.1));
+        border-color: rgba(244, 67, 54, 0.3);
+        color: #f44336;
+    }
+
+    .status-alert.alert-info {
+        background: linear-gradient(135deg, rgba(79, 195, 247, 0.15), rgba(33, 150, 243, 0.1));
+        border-color: rgba(79, 195, 247, 0.3);
+        color: #4fc3f7;
+    }
+
+    .task-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 20px;
+        box-shadow: var(--shadow-card);
+        margin-bottom: 32px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .task-section:hover {
+        box-shadow: var(--shadow-hover);
+        border-color: var(--border-secondary);
+    }
+
+    .task-header {
+        padding: 24px 32px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid var(--border-primary);
+    }
+
+    .task-header.development {
+        background: var(--accent-blue);
+        color: white;
+    }
+
+    .task-header.system {
+        background: var(--accent-green);
+        color: white;
+    }
+
+    .task-header.media {
+        background: var(--accent-gold);
+        color: #1a1a1a;
+    }
+
+    .header-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        background: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-title {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .task-grid {
+        padding: 32px;
+    }
+
+    .task-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-primary);
+        border-radius: 16px;
+        padding: 24px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .task-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .task-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-hover);
+        border-color: var(--border-secondary);
+        background: var(--bg-card);
+    }
+
+    .task-card:hover::before {
+        left: 100%;
+    }
+
+    .task-icon {
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        display: block;
+        transition: all 0.3s ease;
+    }
+
+    .task-card:hover .task-icon {
+        transform: scale(1.1) rotateY(10deg);
+    }
+
+    .task-icon.development { color: #4fc3f7; }
+    .task-icon.system { color: #66bb6a; }
+    .task-icon.media { color: #ffd700; }
+
+    .task-title {
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: var(--text-primary);
+        font-size: 1.1rem;
+    }
+
+    .task-description {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+        line-height: 1.5;
+    }
+
+    .task-btn {
+        width: 100%;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        color: white;
+        font-size: 0.9rem;
+    }
+
+    .task-btn.development {
+        background: var(--accent-blue);
+    }
+
+    .task-btn.system {
+        background: var(--accent-green);
+    }
+
+    .task-btn.media {
+        background: var(--accent-gold);
+        color: #1a1a1a;
+    }
+
+    .task-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .task-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Modal Styling */
+    .modal-content {
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 16px;
+        box-shadow: var(--shadow-premium);
+    }
+
+    .modal-header {
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-primary);
+        border-radius: 16px 16px 0 0;
+        padding: 20px 24px;
+    }
+
+    .modal-title {
+        color: var(--text-primary);
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .btn-close {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        opacity: 0.8;
+    }
+
+    .btn-close:hover {
+        opacity: 1;
+        color: var(--text-primary);
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .system-info-content {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-primary);
+        border-radius: 12px;
+        padding: 20px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: var(--text-primary);
+        max-height: 400px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .modal-footer {
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border-primary);
+        border-radius: 0 0 16px 16px;
+        padding: 16px 24px;
+    }
+
+    .modal-footer .btn {
+        background: var(--accent-blue);
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+
+    .modal-footer .btn:hover {
+        background: #29b6f6;
+        transform: translateY(-1px);
+    }
+
+    @keyframes rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.2rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1rem;
+        }
+        
+        .task-grid {
+            padding: 20px;
+        }
+        
+        .task-card {
+            padding: 20px;
+        }
+        
+        .header-icon {
+            width: 48px;
+            height: 48px;
+            font-size: 1.3rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="automation-hero">
+        <div class="hero-content">
+            <h1 class="hero-title gradient-text">
+                <i class="fas fa-cogs me-3"></i>System Automation
+            </h1>
+            <p class="hero-subtitle">
+                Comprehensive system control and automation suite for enhanced productivity and operational efficiency
+            </p>
+        </div>
+    </div>
+
+    <!-- Status Alert -->
+    <div id="statusAlert" class="status-alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <span id="statusMessage"></span>
+    </div>
+
+    <!-- Development Tools -->
+    <div class="task-section">
+        <div class="task-header development">
+            <div class="header-icon">
+                <i class="fas fa-code"></i>
+            </div>
+            <div>
+                <h5 class="header-title">Development Tools</h5>
+            </div>
+        </div>
+        <div class="task-grid">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="task-card" data-task="open_vscode">
+                        <i class="fas fa-code task-icon development"></i>
+                        <h6 class="task-title">Open VS Code</h6>
+                        <p class="task-description">Launch Visual Studio Code editor for development</p>
+                        <button class="task-btn development">
+                            <i class="fas fa-external-link-alt me-1"></i>Launch Editor
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="task-card" data-task="open_terminal">
+                        <i class="fas fa-terminal task-icon development"></i>
+                        <h6 class="task-title">Open Terminal</h6>
+                        <p class="task-description">Launch command line interface for operations</p>
+                        <button class="task-btn development">
+                            <i class="fas fa-external-link-alt me-1"></i>Launch Terminal
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="task-card" data-task="open_file_explorer">
+                        <i class="fas fa-folder-open task-icon development"></i>
+                        <h6 class="task-title">File Explorer</h6>
+                        <p class="task-description">Browse and manage files and directories</p>
+                        <button class="task-btn development">
+                            <i class="fas fa-external-link-alt me-1"></i>Open Explorer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Controls -->
+    <div class="task-section">
+        <div class="task-header system">
+            <div class="header-icon">
+                <i class="fas fa-cogs"></i>
+            </div>
+            <div>
+                <h5 class="header-title">System Controls</h5>
+            </div>
+        </div>
+        <div class="task-grid">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="task-card" data-task="toggle_bluetooth">
+                        <i class="fab fa-bluetooth task-icon system"></i>
+                        <h6 class="task-title">Bluetooth Control</h6>
+                        <p class="task-description">Enable or disable Bluetooth connectivity</p>
+                        <button class="task-btn system">
+                            <i class="fas fa-power-off me-1"></i>Toggle Service
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="task-card" data-task="connect_audio">
+                        <i class="fas fa-headphones task-icon system"></i>
+                        <h6 class="task-title">Audio Device</h6>
+                        <p class="task-description">Connect and manage audio devices</p>
+                        <button class="task-btn system">
+                            <i class="fas fa-link me-1"></i>Connect Device
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="task-card" data-task="show_system_info">
+                        <i class="fas fa-info-circle task-icon system"></i>
+                        <h6 class="task-title">System Analytics</h6>
+                        <p class="task-description">View comprehensive system information</p>
+                        <button class="task-btn system">
+                            <i class="fas fa-chart-bar me-1"></i>View Analytics
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Media Controls -->
+    <div class="task-section">
+        <div class="task-header media">
+            <div class="header-icon">
+                <i class="fas fa-play-circle"></i>
+            </div>
+            <div>
+                <h5 class="header-title">Media & Entertainment</h5>
+            </div>
+        </div>
+        <div class="task-grid">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="task-card" data-task="play_youtube_music">
+                        <i class="fab fa-youtube task-icon media"></i>
+                        <h6 class="task-title">YouTube Music</h6>
+                        <p class="task-description">Launch YouTube Music streaming service</p>
+                        <button class="task-btn media">
+                            <i class="fas fa-play me-1"></i>Start Streaming
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="task-card" data-task="show_movie_details">
+                        <i class="fas fa-film task-icon media"></i>
+                        <h6 class="task-title">Movie Database</h6>
+                        <p class="task-description">Access IMDB for movie information</p>
+                        <button class="task-btn media">
+                            <i class="fas fa-external-link-alt me-1"></i>Open Database
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="task-card" data-task="open_media_player">
+                        <i class="fas fa-video task-icon media"></i>
+                        <h6 class="task-title">Media Player</h6>
+                        <p class="task-description">Launch multimedia playback application</p>
+                        <button class="task-btn media">
+                            <i class="fas fa-external-link-alt me-1"></i>Launch Player
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Information Modal -->
+    <div class="modal fade" id="systemInfoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-desktop me-2"></i>System Analytics Dashboard
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <pre id="systemInfoContent" class="system-info-content"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Handle task card clicks
+    $('.task-card').click(function() {
+        const taskName = $(this).data('task');
+        executeTask(taskName);
+    });
+
+    function executeTask(taskName) {
+        // Show loading state
+        const card = $(`.task-card[data-task="${taskName}"]`);
+        const button = card.find('button');
+        const originalText = button.html();
+        
+        button.html('<i class="fas fa-spinner fa-spin me-1"></i>Processing...');
+        button.prop('disabled', true);
+
+        // Make API call
+        $.ajax({
+            url: `/api/local-task/${taskName}`,
+            method: 'POST',
+            success: function(response) {
+                showStatus(response.status, response.message);
+                
+                // Special handling for system info
+                if (taskName === 'show_system_info' && response.data) {
+                    $('#systemInfoContent').text(response.data);
+                    $('#systemInfoModal').modal('show');
+                }
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON ? xhr.responseJSON.error : 'Operation failed. Please try again.';
+                showStatus('error', error);
+            },
+            complete: function() {
+                // Restore button state
+                button.html(originalText);
+                button.prop('disabled', false);
+            }
+        });
+    }
+
+    function showStatus(status, message) {
+        const alertDiv = $('#statusAlert');
+        const messageSpan = $('#statusMessage');
+        
+        // Remove existing classes
+        alertDiv.removeClass('alert-success alert-danger alert-info');
+        
+        // Add appropriate class based on status
+        if (status === 'success') {
+            alertDiv.addClass('alert-success');
+            alertDiv.find('i').removeClass().addClass('fas fa-check-circle me-2');
+        } else if (status === 'error') {
+            alertDiv.addClass('alert-danger');
+            alertDiv.find('i').removeClass().addClass('fas fa-exclamation-triangle me-2');
+        } else {
+            alertDiv.addClass('alert-info');
+            alertDiv.find('i').removeClass().addClass('fas fa-info-circle me-2');
+        }
+        
+        messageSpan.text(message);
+        alertDiv.show();
+        
+        // Auto-hide after 6 seconds
+        setTimeout(() => {
+            alertDiv.fadeOut();
+        }, 6000);
+    }
+
+    // Professional entrance animations
+    $('.task-section').each(function(index) {
+        $(this).css('animation-delay', (index * 0.1) + 's');
+        $(this).addClass('animate__animated animate__fadeInUp');
+    });
+
+    // Enhanced hover effects for task cards
+    $('.task-card').hover(
+        function() {
+            $(this).find('.task-icon').addClass('animate__animated animate__pulse');
+        },
+        function() {
+            $(this).find('.task-icon').removeClass('animate__animated animate__pulse');
+        }
+    );
+});
+</script>
+{% endblock %} 

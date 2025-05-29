@@ -1,0 +1,742 @@
+{% extends "base.html" %}
+
+{% block title %}AI Assistant Pro - Enterprise Solution{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        text-align: center;
+        padding: 80px 0;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+        border-radius: 24px;
+        margin-bottom: 60px;
+        border: 1px solid var(--border-primary);
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(from 0deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+        animation: rotate 30s linear infinite;
+        z-index: 1;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-title {
+        font-size: 4rem;
+        font-weight: 900;
+        margin-bottom: 24px;
+        letter-spacing: -1px;
+        line-height: 1.1;
+    }
+
+    .hero-subtitle {
+        font-size: 1.4rem;
+        margin-bottom: 40px;
+        color: var(--text-secondary);
+        font-weight: 400;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.6;
+    }
+
+    .hero-cta {
+        margin-top: 40px;
+    }
+
+    .hero-stats {
+        display: flex;
+        justify-content: center;
+        gap: 60px;
+        margin-top: 50px;
+        flex-wrap: wrap;
+    }
+
+    .hero-stat {
+        text-align: center;
+    }
+
+    .hero-stat-number {
+        font-size: 2.5rem;
+        font-weight: 900;
+        background: var(--accent-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: block;
+        line-height: 1;
+    }
+
+    .hero-stat-label {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        font-weight: 500;
+        margin-top: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .features-section {
+        margin: 80px 0;
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 60px;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 16px;
+        letter-spacing: -0.5px;
+    }
+
+    .section-subtitle {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+
+    .feature-card {
+        height: 100%;
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 20px;
+        padding: 40px 32px;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.02), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-12px);
+        box-shadow: var(--shadow-hover);
+        border-color: var(--border-secondary);
+        background: var(--bg-card-hover);
+    }
+
+    .feature-card:hover::before {
+        left: 100%;
+    }
+
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 32px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        position: relative;
+        transition: all 0.4s ease;
+    }
+
+    .feature-card:hover .feature-icon {
+        transform: scale(1.1) rotateY(15deg);
+    }
+
+    .icon-shopping {
+        background: var(--accent-blue);
+        box-shadow: 0 20px 40px rgba(79, 195, 247, 0.2);
+    }
+
+    .icon-chat {
+        background: var(--accent-green);
+        box-shadow: 0 20px 40px rgba(102, 187, 106, 0.2);
+    }
+
+    .icon-tasks {
+        background: var(--accent-gold);
+        box-shadow: 0 20px 40px rgba(255, 193, 7, 0.2);
+    }
+
+    .icon-terminal {
+        background: var(--accent-purple);
+        box-shadow: 0 20px 40px rgba(156, 39, 176, 0.2);
+    }
+
+    .feature-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: var(--text-primary);
+        text-align: center;
+    }
+
+    .feature-description {
+        color: var(--text-secondary);
+        margin-bottom: 32px;
+        line-height: 1.7;
+        text-align: center;
+    }
+
+    .feature-list {
+        margin-bottom: 32px;
+        padding-left: 0;
+        list-style: none;
+    }
+
+    .feature-list li {
+        padding: 12px 0;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        color: var(--text-secondary);
+    }
+
+    .feature-list li:hover {
+        transform: translateX(8px);
+        color: var(--text-primary);
+    }
+
+    .feature-list .fas {
+        color: #4caf50;
+        margin-right: 12px;
+        font-size: 1.1rem;
+        width: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .feature-list li:hover .fas {
+        transform: scale(1.2);
+        color: #66bb6a;
+    }
+
+    .cta-button {
+        width: 100%;
+        font-weight: 600;
+        padding: 16px 32px;
+        border-radius: 12px;
+        text-transform: none;
+        letter-spacing: 0.3px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        font-size: 1rem;
+    }
+
+    .benefits-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 24px;
+        padding: 80px 60px;
+        margin: 80px 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .benefits-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+        animation: rotate 25s linear infinite reverse;
+    }
+
+    .benefit-item {
+        text-align: center;
+        padding: 40px 20px;
+        transition: all 0.4s ease;
+        position: relative;
+        z-index: 2;
+    }
+
+    .benefit-item:hover {
+        transform: translateY(-8px);
+    }
+
+    .benefit-icon {
+        font-size: 3.5rem;
+        margin-bottom: 24px;
+        display: block;
+        transition: all 0.4s ease;
+    }
+
+    .benefit-item:hover .benefit-icon {
+        transform: scale(1.15) rotateY(10deg);
+    }
+
+    .benefit-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: var(--text-primary);
+    }
+
+    .benefit-description {
+        color: var(--text-secondary);
+        line-height: 1.7;
+        font-size: 1rem;
+    }
+
+    .enterprise-section {
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+        border: 1px solid var(--border-primary);
+        border-radius: 24px;
+        padding: 60px 40px;
+        margin: 80px 0;
+        text-align: center;
+    }
+
+    .enterprise-badge {
+        display: inline-block;
+        background: var(--accent-gold);
+        color: #1a1a1a;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 24px;
+    }
+
+    .enterprise-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 16px;
+        color: var(--text-primary);
+    }
+
+    .enterprise-description {
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+        margin-bottom: 32px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+
+    .floating-elements {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .floating-shape {
+        position: absolute;
+        opacity: 0.1;
+        animation: float 8s ease-in-out infinite;
+        color: var(--text-accent);
+    }
+
+    .shape-1 {
+        top: 10%;
+        left: 10%;
+        font-size: 4rem;
+        animation-delay: 0s;
+    }
+
+    .shape-2 {
+        top: 20%;
+        right: 15%;
+        font-size: 3rem;
+        animation-delay: 2s;
+    }
+
+    .shape-3 {
+        bottom: 20%;
+        left: 20%;
+        font-size: 5rem;
+        animation-delay: 4s;
+    }
+
+    .shape-4 {
+        bottom: 10%;
+        right: 10%;
+        font-size: 3.5rem;
+        animation-delay: 1s;
+    }
+
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0) rotate(0deg);
+        }
+        50% {
+            transform: translateY(-20px) rotate(180deg);
+        }
+    }
+
+    @keyframes rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Animation delays for staggered entrance */
+    .feature-card:nth-child(1) { animation-delay: 0.1s; }
+    .feature-card:nth-child(2) { animation-delay: 0.2s; }
+    .feature-card:nth-child(3) { animation-delay: 0.3s; }
+    .feature-card:nth-child(4) { animation-delay: 0.4s; }
+
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.8rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.1rem;
+        }
+        
+        .hero-stats {
+            gap: 40px;
+        }
+        
+        .benefits-section {
+            padding: 60px 30px;
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+        }
+
+        .enterprise-section {
+            padding: 40px 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Floating Background Elements -->
+    <div class="floating-elements">
+        <i class="fas fa-robot floating-shape shape-1"></i>
+        <i class="fas fa-brain floating-shape shape-2"></i>
+        <i class="fas fa-chart-line floating-shape shape-3"></i>
+        <i class="fas fa-shield-alt floating-shape shape-4"></i>
+    </div>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title gradient-text">
+                <i class="fas fa-robot me-3 floating"></i>AI Assistant Pro
+            </h1>
+            <p class="hero-subtitle">
+                Enterprise-grade AI solutions for modern businesses. Streamline operations, enhance productivity, 
+                and unlock the power of artificial intelligence across your organization.
+            </p>
+            
+            <div class="hero-cta">
+                <a href="{{ url_for('shopping') }}" class="btn btn-primary btn-lg me-3">
+                    <i class="fas fa-rocket me-2"></i>Get Started
+                </a>
+                <a href="#features" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-info-circle me-2"></i>Learn More
+                </a>
+            </div>
+
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <span class="hero-stat-number">4</span>
+                    <div class="hero-stat-label">Core Modules</div>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-number">24/7</span>
+                    <div class="hero-stat-label">Available</div>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-number">100%</span>
+                    <div class="hero-stat-label">Secure</div>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-number">AI</span>
+                    <div class="hero-stat-label">Powered</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enterprise Badge Section -->
+    <div class="enterprise-section">
+        <div class="enterprise-badge">Enterprise Ready</div>
+        <h2 class="enterprise-title">Built for Business Excellence</h2>
+        <p class="enterprise-description">
+            Our AI Assistant Pro delivers enterprise-grade performance with military-level security, 
+            scalable architecture, and comprehensive business intelligence capabilities.
+        </p>
+        <a href="#features" class="btn btn-warning btn-lg">
+            <i class="fas fa-star me-2"></i>Explore Features
+        </a>
+    </div>
+
+    <!-- Features Section -->
+    <div class="features-section" id="features">
+        <div class="section-header">
+            <h2 class="section-title gradient-text">Comprehensive AI Solutions</h2>
+            <p class="section-subtitle">
+                Four powerful modules designed to revolutionize how your business operates, 
+                communicates, and processes information.
+            </p>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <!-- Shopping Intelligence -->
+            <div class="col-lg-6 col-md-6">
+                <div class="feature-card hover-lift">
+                    <div class="feature-icon icon-shopping">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <h4 class="feature-title">Shopping Intelligence</h4>
+                    <p class="feature-description">
+                        Advanced AI-powered product analysis and procurement intelligence for optimal purchasing decisions.
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i>AI Product Analysis & Recommendations</li>
+                        <li><i class="fas fa-check"></i>Real-time Price Comparison</li>
+                        <li><i class="fas fa-check"></i>Market Intelligence Reports</li>
+                        <li><i class="fas fa-check"></i>Automated Data Export</li>
+                    </ul>
+                    <a href="{{ url_for('shopping') }}" class="btn btn-primary cta-button">
+                        <i class="fas fa-chart-line me-2"></i>Explore Intelligence
+                    </a>
+                </div>
+            </div>
+
+            <!-- Conversational AI -->
+            <div class="col-lg-6 col-md-6">
+                <div class="feature-card hover-lift">
+                    <div class="feature-icon icon-chat">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h4 class="feature-title">Conversational AI</h4>
+                    <p class="feature-description">
+                        Enterprise-grade chatbot with advanced natural language processing and document analysis capabilities.
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i>Natural Language Processing</li>
+                        <li><i class="fas fa-check"></i>Document Analysis & Insights</li>
+                        <li><i class="fas fa-check"></i>Multi-format Support</li>
+                        <li><i class="fas fa-check"></i>Context-aware Conversations</li>
+                    </ul>
+                    <a href="{{ url_for('chatbot_page') }}" class="btn btn-success cta-button">
+                        <i class="fas fa-brain me-2"></i>Start Conversation
+                    </a>
+                </div>
+            </div>
+
+            <!-- System Automation -->
+            <div class="col-lg-6 col-md-6">
+                <div class="feature-card hover-lift">
+                    <div class="feature-icon icon-tasks">
+                        <i class="fas fa-desktop"></i>
+                    </div>
+                    <h4 class="feature-title">System Automation</h4>
+                    <p class="feature-description">
+                        Comprehensive system control and automation suite for enhanced productivity and operational efficiency.
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i>Application Management</li>
+                        <li><i class="fas fa-check"></i>System Configuration</li>
+                        <li><i class="fas fa-check"></i>Media & Resource Control</li>
+                        <li><i class="fas fa-check"></i>Automated Workflows</li>
+                    </ul>
+                    <a href="{{ url_for('local_tasks_page') }}" class="btn btn-warning cta-button">
+                        <i class="fas fa-cogs me-2"></i>Control Systems
+                    </a>
+                </div>
+            </div>
+
+            <!-- Terminal Management -->
+            <div class="col-lg-6 col-md-6">
+                <div class="feature-card hover-lift">
+                    <div class="feature-icon icon-terminal">
+                        <i class="fas fa-terminal"></i>
+                    </div>
+                    <h4 class="feature-title">Terminal Management</h4>
+                    <p class="feature-description">
+                        Professional terminal interface with advanced command execution and automated file operations.
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i>Command Line Interface</li>
+                        <li><i class="fas fa-check"></i>Automated File Operations</li>
+                        <li><i class="fas fa-check"></i>Cross-platform Support</li>
+                        <li><i class="fas fa-check"></i>Script Automation</li>
+                    </ul>
+                    <a href="{{ url_for('terminal_page') }}" class="btn btn-info cta-button">
+                        <i class="fas fa-code me-2"></i>Access Terminal
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Benefits Section -->
+    <div class="benefits-section">
+        <div class="section-header">
+            <h3 class="section-title gradient-text">Why Choose AI Assistant Pro?</h3>
+            <p class="section-subtitle">
+                Enterprise-grade features designed for maximum security, performance, and scalability.
+            </p>
+        </div>
+        <div class="row">
+            <div class="col-md-3 benefit-item">
+                <i class="fas fa-lightning-bolt benefit-icon text-warning"></i>
+                <h5 class="benefit-title">Lightning Performance</h5>
+                <p class="benefit-description">Optimized algorithms deliver instant responses with enterprise-grade performance monitoring and analytics.</p>
+            </div>
+            <div class="col-md-3 benefit-item">
+                <i class="fas fa-shield-alt benefit-icon text-success"></i>
+                <h5 class="benefit-title">Military-grade Security</h5>
+                <p class="benefit-description">Advanced encryption, secure protocols, and comprehensive audit trails protect your sensitive business data.</p>
+            </div>
+            <div class="col-md-3 benefit-item">
+                <i class="fas fa-brain benefit-icon text-info"></i>
+                <h5 class="benefit-title">Advanced AI Engine</h5>
+                <p class="benefit-description">State-of-the-art machine learning models provide intelligent insights and predictive analytics.</p>
+            </div>
+            <div class="col-md-3 benefit-item">
+                <i class="fas fa-expand-arrows-alt benefit-icon text-primary"></i>
+                <h5 class="benefit-title">Enterprise Scalability</h5>
+                <p class="benefit-description">Cloud-native architecture scales seamlessly from small teams to enterprise-wide deployments.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Professional hover animations
+    $('.feature-card').hover(
+        function() {
+            $(this).find('.feature-icon').addClass('animate__animated animate__pulse');
+        },
+        function() {
+            $(this).find('.feature-icon').removeClass('animate__animated animate__pulse');
+        }
+    );
+
+    // Animate stats on scroll
+    const animateStats = () => {
+        $('.hero-stat-number').each(function() {
+            const $this = $(this);
+            const target = $this.text();
+            
+            if (target === '∞' || target === 'AI' || target === '24/7' || target === '100%') return;
+            
+            if (!isNaN(target)) {
+                $({ countNum: 0 }).animate({
+                    countNum: target
+                }, {
+                    duration: 2500,
+                    easing: 'swing',
+                    step: function() {
+                        $this.text(Math.floor(this.countNum));
+                    },
+                    complete: function() {
+                        $this.text(target);
+                    }
+                });
+            }
+        });
+    };
+
+    // Trigger stats animation
+    const statsObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateStats();
+                statsObserver.unobserve(entry.target);
+            }
+        });
+    });
+
+    if (document.querySelector('.hero-stats')) {
+        statsObserver.observe(document.querySelector('.hero-stats'));
+    }
+
+    // Feature card click handling
+    $('.feature-card').on('click', function(e) {
+        if (!$(e.target).is('a') && !$(e.target).closest('a').length) {
+            $(this).find('a').get(0).click();
+        }
+    });
+
+    // Smooth scrolling for anchor links
+    $('a[href^="#"]').on('click', function(e) {
+        e.preventDefault();
+        const target = $($(this).attr('href'));
+        if (target.length) {
+            $('html, body').animate({
+                scrollTop: target.offset().top - 100
+            }, 800);
+        }
+    });
+
+    // Professional typing effect for hero subtitle
+    const subtitle = $('.hero-subtitle');
+    const text = subtitle.text();
+    subtitle.text('');
+    
+    let i = 0;
+    const typeWriter = () => {
+        if (i < text.length) {
+            subtitle.text(subtitle.text() + text.charAt(i));
+            i++;
+            setTimeout(typeWriter, 30);
+        }
+    };
+    
+    setTimeout(typeWriter, 1500);
+
+    // Add parallax effect to floating elements
+    $(window).scroll(function() {
+        const scrolled = $(this).scrollTop();
+        $('.floating-shape').each(function() {
+            const rate = scrolled * -0.3;
+            $(this).css('transform', `translateY(${rate}px)`);
+        });
+    });
+
+    // Professional button interactions
+    $('.cta-button').on('mouseenter', function() {
+        $(this).find('i').addClass('animate__animated animate__bounceIn');
+    }).on('mouseleave', function() {
+        $(this).find('i').removeClass('animate__animated animate__bounceIn');
+    });
+});
+</script>
+{% endblock %} 

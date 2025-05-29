@@ -1,0 +1,762 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Intelligence - AI Assistant Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .shopping-hero {
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+        border: 1px solid var(--border-primary);
+        border-radius: 24px;
+        padding: 60px 40px;
+        margin-bottom: 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .shopping-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(from 0deg, transparent, rgba(79, 195, 247, 0.1), transparent);
+        animation: rotate 25s linear infinite;
+        z-index: 1;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-title {
+        font-size: 2.8rem;
+        font-weight: 800;
+        margin-bottom: 16px;
+        letter-spacing: -0.5px;
+    }
+
+    .hero-subtitle {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        margin-bottom: 0;
+        line-height: 1.6;
+    }
+
+    .search-container {
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: var(--shadow-card);
+        transition: all 0.3s ease;
+        position: relative;
+        margin-bottom: 40px;
+    }
+
+    .search-container:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
+        border-color: var(--border-secondary);
+    }
+
+    .search-title {
+        text-align: center;
+        margin-bottom: 32px;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .search-input-group {
+        position: relative;
+        margin-bottom: 24px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 18px 60px 18px 20px;
+        border: 1px solid var(--border-primary);
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    .search-input:focus {
+        border-color: #4fc3f7;
+        box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.1);
+        outline: none;
+        background: var(--bg-card);
+        transform: translateY(-1px);
+    }
+
+    .search-input::placeholder {
+        color: var(--text-muted);
+    }
+
+    .search-btn {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--accent-blue);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 14px 20px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .search-btn:hover {
+        transform: translateY(-50%) scale(1.05);
+        box-shadow: 0 0 20px rgba(79, 195, 247, 0.3);
+    }
+
+    .search-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: translateY(-50%);
+    }
+
+    .suggestions {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-primary);
+        border-radius: 12px;
+        padding: 24px;
+        margin-top: 24px;
+    }
+
+    .suggestions-title {
+        margin-bottom: 16px;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    .suggestion-chip {
+        display: inline-block;
+        background: var(--accent-blue);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        margin: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .suggestion-chip:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(79, 195, 247, 0.3);
+        background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+    }
+
+    .ai-analysis-card {
+        background: var(--bg-card);
+        border: 1px solid rgba(102, 187, 106, 0.3);
+        border-radius: 20px;
+        padding: 32px;
+        margin-bottom: 40px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ai-analysis-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(102, 187, 106, 0.05), transparent);
+        animation: shine 3s infinite;
+    }
+
+    @keyframes shine {
+        0% { left: -100%; }
+        100% { left: 100%; }
+    }
+
+    .ai-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .ai-icon {
+        width: 56px;
+        height: 56px;
+        background: var(--accent-green);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.6rem;
+        animation: pulse 2s infinite;
+        box-shadow: 0 10px 30px rgba(102, 187, 106, 0.2);
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .ai-title {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .ai-subtitle {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .ai-analysis-content {
+        color: var(--text-secondary);
+        line-height: 1.8;
+        font-size: 1rem;
+    }
+
+    .ai-analysis-content h1, .ai-analysis-content h2, .ai-analysis-content h3 {
+        color: var(--text-primary);
+        margin-top: 24px;
+        margin-bottom: 12px;
+    }
+
+    .ai-analysis-content ul {
+        padding-left: 20px;
+    }
+
+    .ai-analysis-content li {
+        margin-bottom: 8px;
+    }
+
+    .products-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 20px;
+        padding: 40px;
+        margin-bottom: 40px;
+    }
+
+    .products-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 32px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border-primary);
+    }
+
+    .products-icon {
+        width: 56px;
+        height: 56px;
+        background: var(--accent-gold);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #1a1a1a;
+        font-size: 1.6rem;
+        box-shadow: 0 10px 30px rgba(255, 193, 7, 0.2);
+    }
+
+    .products-title {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .products-subtitle {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .product-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-primary);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: var(--shadow-card);
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .product-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(79, 195, 247, 0.05), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .product-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-hover);
+        border-color: var(--border-secondary);
+        background: var(--bg-card);
+    }
+
+    .product-card:hover::before {
+        left: 100%;
+    }
+
+    .product-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .product-rating {
+        background: var(--accent-gold);
+        color: #1a1a1a;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+    }
+
+    .product-price {
+        font-size: 1.6rem;
+        font-weight: 800;
+        background: var(--accent-blue);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-align: right;
+    }
+
+    .product-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 66px;
+    }
+
+    .product-reviews {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: auto;
+    }
+
+    .loading-container {
+        text-align: center;
+        padding: 80px 40px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 20px;
+        margin: 40px 0;
+    }
+
+    .loading-spinner {
+        width: 60px;
+        height: 60px;
+        border: 4px solid var(--border-primary);
+        border-top: 4px solid #4fc3f7;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 24px;
+    }
+
+    .loading-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: var(--text-primary);
+    }
+
+    .loading-subtitle {
+        color: var(--text-secondary);
+        margin-bottom: 24px;
+        line-height: 1.6;
+    }
+
+    .progress {
+        height: 8px;
+        background: var(--bg-secondary);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        background: var(--accent-blue);
+        animation: progress-bar-stripes 1s linear infinite;
+    }
+
+    .export-section {
+        background: var(--bg-card);
+        border: 1px solid rgba(156, 39, 176, 0.3);
+        border-radius: 20px;
+        padding: 32px;
+        text-align: center;
+        margin: 40px 0;
+    }
+
+    .export-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: var(--text-primary);
+    }
+
+    .export-subtitle {
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+    }
+
+    .csv-badge {
+        background: var(--accent-purple);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        display: inline-block;
+        margin-top: 12px;
+        animation: bounce 2s infinite;
+        box-shadow: 0 10px 30px rgba(156, 39, 176, 0.2);
+    }
+
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-8px); }
+        60% { transform: translateY(-4px); }
+    }
+
+    .error-container {
+        background: var(--bg-card);
+        border: 1px solid rgba(244, 67, 54, 0.3);
+        border-radius: 20px;
+        padding: 32px;
+        margin: 40px 0;
+        color: var(--text-primary);
+    }
+
+    .error-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .error-icon {
+        color: #f44336;
+        font-size: 2rem;
+    }
+
+    .error-title {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 700;
+    }
+
+    .error-message {
+        margin: 8px 0 0 0;
+        color: var(--text-secondary);
+    }
+
+    @keyframes rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.2rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1rem;
+        }
+        
+        .search-container {
+            padding: 24px;
+        }
+        
+        .search-input {
+            padding: 16px 50px 16px 16px;
+        }
+        
+        .product-card {
+            padding: 20px;
+        }
+        
+        .loading-container {
+            padding: 60px 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="shopping-hero">
+        <div class="hero-content">
+            <h1 class="hero-title gradient-text">
+                <i class="fas fa-chart-line me-3"></i>Shopping Intelligence
+            </h1>
+            <p class="hero-subtitle">
+                Advanced AI-powered product analysis and market intelligence for optimal purchasing decisions
+            </p>
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-container">
+        <h3 class="search-title">What products are you analyzing today?</h3>
+        <div class="search-input-group">
+            <input type="text" class="search-input" id="searchQuery" 
+                   placeholder="Enter your product inquiry (e.g., 'Find the best gaming laptop under $1200')">
+            <button class="search-btn" id="searchBtn">
+                <i class="fas fa-search me-2"></i>Analyze
+            </button>
+        </div>
+        
+        <div class="suggestions">
+            <p class="suggestions-title">
+                <i class="fas fa-lightbulb me-2"></i><strong>Popular Searches:</strong>
+            </p>
+            <span class="suggestion-chip" onclick="setQuery('Find the best smartphone under $600')">
+                Best smartphone under $600
+            </span>
+            <span class="suggestion-chip" onclick="setQuery('Top gaming laptops under $1200')">
+                Gaming laptops
+            </span>
+            <span class="suggestion-chip" onclick="setQuery('Best wireless headphones under $200')">
+                Wireless headphones
+            </span>
+            <span class="suggestion-chip" onclick="setQuery('Smart watch under $300')">
+                Smart watches
+            </span>
+            <span class="suggestion-chip" onclick="setQuery('4K monitor under $400')">
+                4K monitors
+            </span>
+        </div>
+    </div>
+
+    <!-- Loading Section -->
+    <div id="loadingSection" class="loading-container" style="display: none;">
+        <div class="loading-spinner"></div>
+        <h4 class="loading-title">
+            <i class="fas fa-brain me-2"></i>AI Analysis in Progress
+        </h4>
+        <p class="loading-subtitle">
+            Our advanced AI is analyzing thousands of products, comparing prices, 
+            and generating intelligent recommendations for your query...
+        </p>
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsSection" style="display: none;">
+        <!-- AI Analysis -->
+        <div class="ai-analysis-card">
+            <div class="ai-header">
+                <div class="ai-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div>
+                    <h4 class="ai-title">AI Market Intelligence</h4>
+                    <p class="ai-subtitle">Comprehensive product analysis and recommendations</p>
+                </div>
+            </div>
+            <div id="aiAnalysis" class="ai-analysis-content"></div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="products-section">
+            <div class="products-header">
+                <div class="products-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div>
+                    <h4 class="products-title">Top Product Recommendations</h4>
+                    <p class="products-subtitle">Ranked by AI analysis, ratings, and market intelligence</p>
+                </div>
+            </div>
+            <div id="productsGrid" class="row"></div>
+        </div>
+
+        <!-- Export Section -->
+        <div class="export-section">
+            <h5 class="export-title">
+                <i class="fas fa-download me-2"></i>Analysis Export
+            </h5>
+            <p class="export-subtitle">Your comprehensive analysis has been saved for future reference:</p>
+            <div class="csv-badge" id="csvFileName">
+                <i class="fas fa-file-csv me-2"></i>analysis_results.csv
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Section -->
+    <div id="errorSection" class="error-container" style="display: none;">
+        <div class="error-header">
+            <i class="fas fa-exclamation-triangle error-icon"></i>
+            <div>
+                <h5 class="error-title">Analysis Error</h5>
+                <p class="error-message" id="errorMessage"></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#searchBtn').click(function() {
+        performSearch();
+    });
+
+    $('#searchQuery').keypress(function(e) {
+        if (e.which == 13) {
+            performSearch();
+        }
+    });
+
+    window.setQuery = function(query) {
+        $('#searchQuery').val(query);
+        $('#searchQuery').focus();
+    };
+
+    function performSearch() {
+        const query = $('#searchQuery').val().trim();
+        if (!query) {
+            $('#searchQuery').focus();
+            return;
+        }
+
+        // Show loading
+        $('#loadingSection').show();
+        $('#resultsSection').hide();
+        $('#errorSection').hide();
+        $('#searchBtn').prop('disabled', true);
+
+        // Make API call
+        $.ajax({
+            url: '/api/search',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ query: query }),
+            success: function(response) {
+                displayResults(response);
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON ? xhr.responseJSON.error : 'An error occurred during analysis. Please try again.';
+                displayError(error);
+            },
+            complete: function() {
+                $('#loadingSection').hide();
+                $('#searchBtn').prop('disabled', false);
+            }
+        });
+    }
+
+    function displayResults(data) {
+        // Display AI Analysis with markdown parsing
+        const analysisHtml = marked.parse(data.ai_analysis || 'No analysis available');
+        $('#aiAnalysis').html(analysisHtml);
+
+        // Display Products with enhanced design
+        const productsHtml = data.products.map((product, index) => `
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="product-card" style="animation-delay: ${index * 0.1}s">
+                    <div class="product-header">
+                        <div class="product-rating">
+                            <i class="fas fa-star"></i> ${product.rating_value || 'N/A'}
+                        </div>
+                        <div class="product-price">₹${product.price}</div>
+                    </div>
+                    <h6 class="product-title">${product.title}</h6>
+                    <div class="product-reviews">
+                        <i class="fas fa-users"></i>
+                        ${product.reviews}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        $('#productsGrid').html(productsHtml);
+        $('#csvFileName').html(`<i class="fas fa-file-csv me-2"></i>${data.csv_file || 'analysis_results.csv'}`);
+        $('#resultsSection').show();
+
+        // Scroll to results with smooth animation
+        $('html, body').animate({
+            scrollTop: $('#resultsSection').offset().top - 100
+        }, 800);
+    }
+
+    function displayError(error) {
+        $('#errorMessage').text(error);
+        $('#errorSection').show();
+        $('html, body').animate({
+            scrollTop: $('#errorSection').offset().top - 100
+        }, 800);
+    }
+
+    // Professional interactive elements
+    $(document).on('mouseenter', '.product-card', function() {
+        $(this).find('.product-rating').addClass('animate__animated animate__pulse');
+    });
+
+    $(document).on('mouseleave', '.product-card', function() {
+        $(this).find('.product-rating').removeClass('animate__animated animate__pulse');
+    });
+
+    // Add hover effects to suggestion chips
+    $('.suggestion-chip').hover(
+        function() {
+            $(this).addClass('animate__animated animate__bounceIn');
+        },
+        function() {
+            $(this).removeClass('animate__animated animate__bounceIn');
+        }
+    );
+
+    // Professional search input focus effects
+    $('#searchQuery').focus(function() {
+        $(this).parent().addClass('focused');
+    }).blur(function() {
+        $(this).parent().removeClass('focused');
+    });
+});
+</script>
+{% endblock %} 
