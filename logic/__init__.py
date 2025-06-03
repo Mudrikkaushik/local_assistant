@@ -1,0 +1,1 @@
+# Logic package for the local AI assistant 

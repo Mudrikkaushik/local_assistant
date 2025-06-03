@@ -1,0 +1,2557 @@
+{% extends "base.html" %}
+
+{% block title %}Web Scraper - AI Assistant Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .scraper-hero {
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+        border: 1px solid var(--border-primary);
+        border-radius: 24px;
+        padding: 60px 40px;
+        margin-bottom: 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .scraper-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(from 0deg, transparent, rgba(156, 39, 176, 0.1), transparent);
+        animation: rotate 25s linear infinite;
+        z-index: 1;
+    }
+
+    @keyframes rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-title {
+        font-size: 2.8rem;
+        font-weight: 800;
+        margin-bottom: 16px;
+        letter-spacing: -0.5px;
+        background: var(--accent-purple);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero-subtitle {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        margin-bottom: 0;
+        line-height: 1.6;
+    }
+
+    .config-container {
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: var(--shadow-card);
+        transition: all 0.3s ease;
+        position: relative;
+        margin-bottom: 40px;
+    }
+
+    .config-container:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
+        border-color: var(--border-secondary);
+    }
+
+    .config-title {
+        text-align: center;
+        margin-bottom: 32px;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 16px 20px;
+        border: 1px solid var(--border-primary);
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    .form-control:focus {
+        border-color: #9c27b0;
+        box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.1);
+        outline: none;
+        background: var(--bg-card);
+        transform: translateY(-1px);
+    }
+
+    .form-control::placeholder {
+        color: var(--text-muted);
+    }
+
+    .options-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+    .option-group {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-primary);
+        border-radius: 12px;
+        padding: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .option-group:hover {
+        border-color: var(--border-secondary);
+        background: var(--bg-card);
+    }
+
+    .option-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+        font-size: 0.95rem;
+    }
+
+    .checkbox-container {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 12px;
+    }
+
+    .checkbox-custom {
+        position: relative;
+        width: 20px;
+        height: 20px;
+        appearance: none;
+        border: 2px solid var(--border-primary);
+        border-radius: 4px;
+        background: var(--bg-secondary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .checkbox-custom:checked {
+        background: var(--accent-purple);
+        border-color: #9c27b0;
+    }
+
+    .checkbox-custom:checked::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .scrape-btn {
+        background: var(--accent-purple);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 18px 40px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: block;
+        margin: 0 auto;
+        min-width: 200px;
+    }
+
+    .scrape-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(156, 39, 176, 0.3);
+    }
+
+    .scrape-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .progress-container {
+        margin: 32px 0;
+        display: none;
+    }
+
+    .progress-bar-custom {
+        width: 100%;
+        height: 8px;
+        background: var(--bg-secondary);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 16px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: var(--accent-purple);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+        width: 0%;
+    }
+
+    .progress-text {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .results-container {
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: var(--shadow-card);
+        margin-bottom: 40px;
+        display: none;
+    }
+
+    .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .results-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .download-buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .download-btn {
+        background: var(--accent-green);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .download-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 187, 106, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .download-btn.json {
+        background: var(--accent-purple);
+    }
+
+    .download-btn.json:hover {
+        box-shadow: 0 6px 20px rgba(156, 39, 176, 0.3);
+    }
+
+    .results-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+    .results-summary {
+        display: flex;
+        justify-content: center;
+        gap: 32px;
+        flex-wrap: wrap;
+    }
+
+    .summary-item {
+        text-align: center;
+    }
+
+    .summary-number {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #66bb6a;
+        display: block;
+    }
+
+    .summary-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .page-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-card);
+        border-color: var(--border-secondary);
+    }
+
+    .page-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .status-icon {
+        font-size: 1.5rem;
+        margin-top: 4px;
+    }
+
+    .status-icon.success {
+        color: #66bb6a;
+    }
+
+    .status-icon.error {
+        color: #f44336;
+    }
+
+    .page-title {
+        flex: 1;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    .page-url {
+        color: #64b5f6;
+        font-size: 0.9rem;
+        text-decoration: none;
+        margin-bottom: 12px;
+        display: block;
+        word-break: break-all;
+    }
+
+    .page-url:hover {
+        text-decoration: underline;
+    }
+
+    .page-content {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 16px;
+    }
+
+    .page-stats {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .loading-message {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-primary);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .error-message {
+        background: rgba(244, 67, 54, 0.1);
+        border: 1px solid rgba(244, 67, 54, 0.3);
+        color: #f44336;
+    }
+
+    .success-message {
+        background: rgba(102, 187, 106, 0.1);
+        border: 1px solid rgba(102, 187, 106, 0.3);
+        color: #66bb6a;
+    }
+
+    /* AI Insights Styles */
+    .insights-container {
+        margin-top: 60px;
+    }
+
+    .insights-hero {
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+        border: 1px solid var(--border-primary);
+        border-radius: 24px;
+        padding: 50px 40px;
+        margin-bottom: 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .insights-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(from 0deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+        animation: rotate 30s linear infinite;
+        z-index: 1;
+    }
+
+    .insights-hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .insights-title {
+        font-size: 2.4rem;
+        font-weight: 800;
+        margin-bottom: 16px;
+        letter-spacing: -0.5px;
+        background: var(--accent-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .insights-subtitle {
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+        margin-bottom: 0;
+        line-height: 1.6;
+    }
+
+    .insights-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 24px;
+        margin-bottom: 40px;
+    }
+
+    .insight-stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 16px;
+        padding: 24px;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .insight-stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-card);
+        border-color: var(--border-secondary);
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+        margin-bottom: 12px;
+        background: var(--accent-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .insights-analysis-container {
+        margin-bottom: 40px;
+    }
+
+    .analysis-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: var(--shadow-card);
+        transition: all 0.3s ease;
+    }
+
+    .analysis-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .analysis-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .analysis-content {
+        color: var(--text-secondary);
+        line-height: 1.8;
+        font-size: 1rem;
+    }
+
+    .analysis-content h3 {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin: 24px 0 12px 0;
+        font-size: 1.2rem;
+    }
+
+    .analysis-content h4 {
+        color: var(--text-accent);
+        font-weight: 600;
+        margin: 20px 0 8px 0;
+        font-size: 1.1rem;
+    }
+
+    .analysis-content ul {
+        margin: 12px 0 20px 0;
+        padding-left: 20px;
+    }
+
+    .analysis-content li {
+        margin-bottom: 8px;
+        line-height: 1.7;
+    }
+
+    .insights-breakdown-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+    }
+
+    .breakdown-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 16px;
+        padding: 24px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .breakdown-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-card);
+        border-color: var(--border-secondary);
+    }
+
+    .breakdown-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        text-align: center;
+    }
+
+    .breakdown-content {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .breakdown-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border-primary);
+    }
+
+    .breakdown-item:last-child {
+        border-bottom: none;
+    }
+
+    .breakdown-label {
+        font-weight: 500;
+        color: var(--text-secondary);
+        text-transform: capitalize;
+    }
+
+    .breakdown-value {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .keyword-tag {
+        display: inline-block;
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin: 4px;
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .keyword-tag:hover {
+        background: rgba(102, 126, 234, 0.2);
+        transform: translateY(-1px);
+    }
+
+    .keyword-count {
+        background: #667eea;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        margin-left: 6px;
+    }
+
+    .heading-bar {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .heading-level {
+        font-weight: 600;
+        color: var(--text-primary);
+        min-width: 40px;
+        font-size: 0.9rem;
+    }
+
+    .heading-progress {
+        flex: 1;
+        height: 8px;
+        background: var(--bg-secondary);
+        border-radius: 4px;
+        margin: 0 12px;
+        overflow: hidden;
+    }
+
+    .heading-fill {
+        height: 100%;
+        background: var(--accent-primary);
+        border-radius: 4px;
+        transition: width 0.8s ease;
+    }
+
+    .heading-count {
+        font-weight: 600;
+        color: var(--text-accent);
+        font-size: 0.9rem;
+        min-width: 30px;
+        text-align: right;
+    }
+
+    .discovery-container {
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: var(--shadow-card);
+        transition: all 0.3s ease;
+        position: relative;
+        margin-bottom: 40px;
+    }
+
+    .discovery-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .discovery-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-primary);
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--border-secondary);
+    }
+
+    .stat-number {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--text-accent);
+        display: block;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-top: 4px;
+    }
+
+    .category-section {
+        margin-bottom: 24px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-primary);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .category-header {
+        background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border-primary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .category-header:hover {
+        background: linear-gradient(135deg, var(--bg-card), var(--bg-tertiary));
+    }
+
+    .category-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .category-count {
+        background: var(--accent-purple);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .category-content {
+        display: none;
+        padding: 0;
+    }
+
+    .category-content.expanded {
+        display: block;
+    }
+
+    .page-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--border-primary);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .page-item:last-child {
+        border-bottom: none;
+    }
+
+    .page-item:hover {
+        background: var(--bg-card);
+    }
+
+    .page-checkbox {
+        margin-right: 12px;
+        width: 18px;
+        height: 18px;
+        appearance: none;
+        border: 2px solid var(--border-primary);
+        border-radius: 4px;
+        background: var(--bg-secondary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .page-checkbox:checked {
+        background: var(--accent-purple);
+        border-color: #9c27b0;
+    }
+
+    .page-checkbox:checked::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .page-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .page-url {
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 2px;
+    }
+
+    .page-url:hover {
+        color: var(--text-accent);
+        text-decoration: underline;
+    }
+
+    .page-path {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .page-actions {
+        display: flex;
+        gap: 8px;
+        margin-left: 12px;
+    }
+
+    .scrape-single-btn {
+        background: var(--accent-green);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .scrape-single-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 187, 106, 0.3);
+    }
+
+    .expand-icon {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        transition: transform 0.3s ease;
+    }
+
+    .category-header.expanded .expand-icon {
+        transform: rotate(90deg);
+    }
+
+    .discover-section {
+        text-align: center;
+        margin-top: 24px;
+        padding: 24px;
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+        border: 1px solid var(--border-primary);
+        border-radius: 16px;
+    }
+
+    .discover-btn {
+        background: var(--accent-purple);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 18px 40px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: block;
+        margin: 0 auto;
+        min-width: 200px;
+    }
+
+    .discover-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(156, 39, 176, 0.3);
+    }
+
+    .discover-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .discover-description {
+        margin-top: 12px;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    /* Full Content Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+        background: var(--bg-card);
+        border: 1px solid var(--border-primary);
+        border-radius: 16px;
+        width: 90%;
+        max-width: 1000px;
+        max-height: 90%;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        position: relative;
+    }
+
+    .modal-header {
+        padding: 24px;
+        border-bottom: 1px solid var(--border-primary);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--bg-secondary);
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .modal-close:hover {
+        background: var(--border-primary);
+        color: var(--text-primary);
+    }
+
+    .modal-body {
+        padding: 24px;
+        overflow-y: auto;
+        max-height: calc(90vh - 120px);
+    }
+
+    .content-section {
+        margin-bottom: 24px;
+    }
+
+    .content-section h4 {
+        color: var(--text-primary);
+        margin-bottom: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .content-text {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-primary);
+        border-radius: 12px;
+        padding: 20px;
+        font-family: 'Roboto Mono', monospace;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        color: var(--text-primary);
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .content-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .meta-item {
+        background: var(--bg-secondary);
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border-primary);
+    }
+
+    .meta-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+    }
+
+    .meta-value {
+        color: var(--text-primary);
+        font-size: 1rem;
+    }
+
+    .view-full-btn {
+        background: var(--accent-blue);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 8px;
+    }
+
+    .view-full-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+    }
+
+    @media (max-width: 768px) {
+        .options-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .results-summary {
+            gap: 20px;
+        }
+        
+        .page-stats {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .insights-stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .insights-breakdown-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .insights-title {
+            font-size: 2rem;
+        }
+
+        .analysis-card {
+            padding: 24px;
+        }
+
+        .results-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .download-buttons {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .modal-content {
+            width: 95%;
+            margin: 20px;
+        }
+
+        .content-meta {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="scraper-hero">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                <i class="fas fa-spider me-3"></i>Web Scraper
+            </h1>
+            <p class="hero-subtitle">
+                Extract data from any website page by page with our intelligent scraping tool
+            </p>
+        </div>
+    </div>
+
+    <!-- Configuration Section -->
+    <div class="config-container">
+        <h2 class="config-title">
+            <i class="fas fa-cog me-2"></i>Scraping Configuration
+        </h2>
+        
+        <form id="scraperForm">
+            <div class="form-group">
+                <label class="form-label" for="urlInput">
+                    <i class="fas fa-link me-2"></i>Website URL
+                </label>
+                <input 
+                    type="url" 
+                    id="urlInput" 
+                    class="form-control" 
+                    placeholder="Enter website URL (e.g., https://example.com)"
+                    required
+                >
+            </div>
+
+            <div class="options-row">
+                <div class="option-group">
+                    <div class="option-title">
+                        <i class="fas fa-list-ol me-2"></i>Maximum Pages
+                    </div>
+                    <input 
+                        type="number" 
+                        id="maxPagesInput" 
+                        class="form-control" 
+                        min="1" 
+                        max="200" 
+                        value="20"
+                        placeholder="20"
+                    >
+                </div>
+
+                <div class="option-group">
+                    <div class="option-title">
+                        <i class="fas fa-robot me-2"></i>Scraping Method
+                    </div>
+                    <div class="checkbox-container">
+                        <input 
+                            type="checkbox" 
+                            id="useSelenium" 
+                            class="checkbox-custom"
+                        >
+                        <label for="useSelenium">Use Selenium (for JS-heavy sites)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="checkbox-container">
+                    <input 
+                        type="checkbox" 
+                        id="generateInsights" 
+                        class="checkbox-custom"
+                        checked
+                    >
+                    <label for="generateInsights">
+                        <i class="fas fa-brain me-2"></i>Generate AI Insights (Recommended)
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="scrape-btn" id="scrapeBtn">
+                <i class="fas fa-play me-2"></i>Start Scraping
+            </button>
+        </form>
+    </div>
+
+    <!-- Page Discovery Section -->
+    <div class="discovery-container" id="discoveryContainer" style="display: none;">
+        <h2 class="config-title">
+            <i class="fas fa-search me-2"></i>Discovered Pages
+        </h2>
+        
+        <div class="discovery-controls">
+            <button class="btn btn-primary" id="selectAllBtn">
+                <i class="fas fa-check-double me-2"></i>Select All
+            </button>
+            <button class="btn btn-secondary" id="deselectAllBtn">
+                <i class="fas fa-times me-2"></i>Deselect All
+            </button>
+            <button class="btn btn-success" id="scrapeSelectedBtn" disabled>
+                <i class="fas fa-download me-2"></i>Scrape Selected Pages
+            </button>
+        </div>
+
+        <div class="discovery-stats" id="discoveryStats">
+            <!-- Discovery statistics will be populated by JavaScript -->
+        </div>
+
+        <div class="page-categories" id="pageCategories">
+            <!-- Categorized pages will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Add Discover Pages Button -->
+    <div class="discover-section">
+        <button type="button" class="discover-btn" id="discoverBtn">
+            <i class="fas fa-search me-2"></i>Discover All Pages First
+        </button>
+        <p class="discover-description">
+            Find all pages on the website before scraping. This helps you see what's available and choose specific pages to scrape.
+        </p>
+    </div>
+
+    <!-- Progress Section -->
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-bar-custom">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">Initializing...</div>
+    </div>
+
+    <!-- Loading Messages -->
+    <div id="loadingMessages"></div>
+
+    <!-- Results Section -->
+    <div class="results-container" id="resultsContainer">
+        <div class="results-header">
+            <h3 class="results-title">
+                <i class="fas fa-chart-bar me-2"></i>Scraping Results
+            </h3>
+            <div class="download-buttons">
+                <a href="#" class="download-btn json" id="downloadJsonBtn">
+                    <i class="fas fa-file-download me-2"></i>Download as JSON
+                </a>
+                <button class="download-btn" id="debugDataStoreBtn" style="background: var(--accent-blue);">
+                    <i class="fas fa-bug me-2"></i>Debug Data Store
+                </button>
+            </div>
+            <div class="results-summary" id="resultsSummary">
+                <!-- Summary will be populated by JavaScript -->
+            </div>
+        </div>
+        
+        <div id="scrapedPages">
+            <!-- Scraped pages will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- AI Insights Section -->
+    <div class="insights-container" id="insightsContainer" style="display: none;">
+        <div class="insights-hero">
+            <div class="insights-hero-content">
+                <h2 class="insights-title">
+                    <i class="fas fa-brain me-3"></i>AI-Powered Website Insights
+                </h2>
+                <p class="insights-subtitle">
+                    Comprehensive analysis and actionable intelligence from your scraped data
+                </p>
+            </div>
+        </div>
+
+        <!-- Quick Stats Cards -->
+        <div class="insights-stats-grid" id="insightsStats">
+            <!-- Stats cards will be populated by JavaScript -->
+        </div>
+
+        <!-- Main Analysis -->
+        <div class="insights-analysis-container">
+            <div class="analysis-card">
+                <h3 class="analysis-title">
+                    <i class="fas fa-microscope me-2"></i>Detailed Analysis
+                </h3>
+                <div class="analysis-content" id="aiAnalysisContent">
+                    <!-- AI analysis will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Breakdown -->
+        <div class="insights-breakdown-grid">
+            <div class="breakdown-card">
+                <h4 class="breakdown-title">
+                    <i class="fas fa-sitemap me-2"></i>Page Classification
+                </h4>
+                <div class="breakdown-content" id="pageClassification">
+                    <!-- Page classification will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="breakdown-card">
+                <h4 class="breakdown-title">
+                    <i class="fas fa-file-alt me-2"></i>Content Analysis
+                </h4>
+                <div class="breakdown-content" id="contentAnalysis">
+                    <!-- Content analysis will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="breakdown-card">
+                <h4 class="breakdown-title">
+                    <i class="fas fa-cloud me-2"></i>Top Keywords
+                </h4>
+                <div class="breakdown-content" id="topKeywords">
+                    <!-- Keywords will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="breakdown-card">
+                <h4 class="breakdown-title">
+                    <i class="fas fa-heading me-2"></i>Heading Structure
+                </h4>
+                <div class="breakdown-content" id="headingStructure">
+                    <!-- Heading analysis will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Full Content Modal -->
+<div class="modal-overlay" id="fullContentModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="modal-title">Page Content</h4>
+            <button class="modal-close" id="closeModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="content-section">
+                <h4>Content</h4>
+                <div class="content-text" id="contentText"></div>
+            </div>
+            <div class="content-section">
+                <h4>Meta Information</h4>
+                <div class="content-meta" id="contentMeta">
+                    <!-- Meta information will be populated by JavaScript -->
+                </div>
+            </div>
+            <button class="view-full-btn" id="viewFullContent">View Full Content</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let isScrapingInProgress = false;
+    let currentScrapedData = [];
+    
+    // Global data store for page data to avoid JSON in HTML attributes
+    window.pageDataStore = {};
+    let pageDataCounter = 0;
+
+    // Make functions globally available
+    window.viewFullContent = function(url, pageDataOrId) {
+        try {
+            console.log('viewFullContent called with:', { url, pageDataOrId });
+            
+            let pageData;
+            
+            // Check if it's a data store ID
+            if (typeof pageDataOrId === 'string' && pageDataOrId.startsWith('pageData_')) {
+                console.log('Using data store ID:', pageDataOrId);
+                pageData = window.pageDataStore[pageDataOrId];
+                console.log('Retrieved data from store:', pageData);
+                console.log('All store contents:', window.pageDataStore);
+                if (!pageData) {
+                    throw new Error('Page data not found in store for ID: ' + pageDataOrId);
+                }
+            } else if (typeof pageDataOrId === 'string') {
+                console.log('Parsing string data...');
+                // Try different parsing approaches
+                try {
+                    pageData = JSON.parse(pageDataOrId.replace(/&quot;/g, '"'));
+                } catch (e1) {
+                    console.log('First parse failed, trying direct parse...');
+                    try {
+                        pageData = JSON.parse(pageDataOrId);
+                    } catch (e2) {
+                        console.log('Direct parse failed, trying unescape...');
+                        pageData = JSON.parse(decodeURIComponent(pageDataOrId));
+                    }
+                }
+            } else if (typeof pageDataOrId === 'object') {
+                console.log('Using object data directly...');
+                pageData = pageDataOrId;
+            } else {
+                throw new Error('Invalid pageData type: ' + typeof pageDataOrId);
+            }
+            
+            console.log('Parsed page data:', pageData);
+            
+            if (!pageData || !pageData.url) {
+                throw new Error('Invalid page data structure');
+            }
+            
+            // Populate modal with data
+            $('#fullContentModal .modal-title').text(`Full Content - ${pageData.title || 'Untitled'}`);
+            
+            // Set full content
+            $('#contentText').text(pageData.content || 'No content available');
+            
+            // Set meta information
+            const metaHtml = `
+                <div class="meta-item">
+                    <div class="meta-label">URL</div>
+                    <div class="meta-value">
+                        <a href="${pageData.url}" target="_blank" style="color: var(--text-accent); word-break: break-all;">${pageData.url}</a>
+                    </div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Title</div>
+                    <div class="meta-value">${pageData.title || 'No title'}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Word Count</div>
+                    <div class="meta-value">${pageData.word_count || 0}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Links Found</div>
+                    <div class="meta-value">${pageData.links_found || 0}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Headings Count</div>
+                    <div class="meta-value">${pageData.headings ? pageData.headings.length : 0}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Scraped At</div>
+                    <div class="meta-value">${pageData.timestamp || 'Unknown'}</div>
+                </div>
+                ${pageData.meta_description ? `
+                <div class="meta-item" style="grid-column: 1 / -1;">
+                    <div class="meta-label">Meta Description</div>
+                    <div class="meta-value">${pageData.meta_description}</div>
+                </div>
+                ` : ''}
+                ${pageData.headings && pageData.headings.length > 0 ? `
+                <div class="meta-item" style="grid-column: 1 / -1;">
+                    <div class="meta-label">Headings Structure</div>
+                    <div class="meta-value">
+                        ${pageData.headings.map(h => `<div style="margin: 4px 0;"><strong>${h.level}:</strong> ${h.text}</div>`).join('')}
+                    </div>
+                </div>
+                ` : ''}
+            `;
+            
+            $('#contentMeta').html(metaHtml);
+            
+            // Show modal
+            $('#fullContentModal').css('display', 'flex').hide().fadeIn(300);
+            
+            console.log('Modal displayed successfully');
+        } catch (error) {
+            console.error('Error in viewFullContent:', error);
+            console.error('Stack trace:', error.stack);
+            showMessage('❌ Error displaying content: ' + error.message, 'error');
+        }
+    };
+
+    window.downloadSinglePageJson = function(pageDataOrId) {
+        try {
+            console.log('downloadSinglePageJson called with:', pageDataOrId);
+            
+            let pageData;
+            
+            // Check if it's a data store ID
+            if (typeof pageDataOrId === 'string' && pageDataOrId.startsWith('pageData_')) {
+                console.log('Using data store ID:', pageDataOrId);
+                pageData = window.pageDataStore[pageDataOrId];
+                if (!pageData) {
+                    throw new Error('Page data not found in store for ID: ' + pageDataOrId);
+                }
+            } else if (typeof pageDataOrId === 'string') {
+                console.log('Parsing string data...');
+                // Try different parsing approaches
+                try {
+                    pageData = JSON.parse(pageDataOrId.replace(/&quot;/g, '"'));
+                } catch (e1) {
+                    console.log('First parse failed, trying direct parse...');
+                    try {
+                        pageData = JSON.parse(pageDataOrId);
+                    } catch (e2) {
+                        console.log('Direct parse failed, trying unescape...');
+                        pageData = JSON.parse(decodeURIComponent(pageDataOrId));
+                    }
+                }
+            } else if (typeof pageDataOrId === 'object') {
+                console.log('Using object data directly...');
+                pageData = pageDataOrId;
+            } else {
+                throw new Error('Invalid pageData type: ' + typeof pageDataOrId);
+            }
+            
+            console.log('Parsed page data for download:', pageData);
+            
+            if (!pageData) {
+                throw new Error('Invalid page data structure');
+            }
+            
+            const dataStr = JSON.stringify(pageData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `scraped_page_${Date.now()}.json`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            console.log('Download completed successfully');
+            showMessage('✅ Page data downloaded as JSON', 'success');
+        } catch (error) {
+            console.error('Error in downloadSinglePageJson:', error);
+            console.error('Stack trace:', error.stack);
+            showMessage('❌ Error downloading page data: ' + error.message, 'error');
+        }
+    };
+
+    window.downloadAllDataAsJson = function() {
+        try {
+            if (!currentScrapedData || currentScrapedData.length === 0) {
+                showMessage('❌ No data available to download', 'error');
+                return;
+            }
+            
+            const downloadData = {
+                metadata: {
+                    total_pages: currentScrapedData.length,
+                    successful_pages: currentScrapedData.filter(page => !page.error).length,
+                    download_timestamp: new Date().toISOString(),
+                    tool: "AI Assistant Pro - Web Scraper"
+                },
+                pages: currentScrapedData
+            };
+            
+            const dataStr = JSON.stringify(downloadData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `web_scrape_data_${Date.now()}.json`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            showMessage(`✅ Downloaded ${currentScrapedData.length} pages as JSON`, 'success');
+        } catch (error) {
+            console.error('Error in downloadAllDataAsJson:', error);
+            showMessage('❌ Error downloading data', 'error');
+        }
+    };
+
+    $('#scraperForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        if (isScrapingInProgress) {
+            return;
+        }
+
+        const url = $('#urlInput').val().trim();
+        const maxPages = parseInt($('#maxPagesInput').val()) || 20;
+        const useSelenium = $('#useSelenium').is(':checked');
+        const generateInsights = $('#generateInsights').is(':checked');
+
+        if (!url) {
+            showMessage('Please enter a valid URL', 'error');
+            return;
+        }
+
+        startScraping(url, maxPages, useSelenium, generateInsights);
+    });
+
+    function startScraping(url, maxPages, useSelenium, generateInsights) {
+        isScrapingInProgress = true;
+        
+        // Update UI
+        $('#scrapeBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Scraping...');
+        $('#progressContainer').show();
+        $('#loadingMessages').empty();
+        $('#resultsContainer').hide();
+        
+        // Show initial progress
+        updateProgress(0, 'Starting scraper...');
+        showMessage(`🚀 Starting to scrape ${url}`, 'info');
+        showMessage(`📄 Target: ${maxPages} pages maximum`, 'info');
+        showMessage(`🛠️ Method: ${useSelenium ? 'Selenium (JavaScript enabled)' : 'HTTP Requests (Fast)'}`, 'info');
+
+        // Make API request
+        $.ajax({
+            url: '/api/scrape',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                url: url,
+                max_pages: maxPages,
+                use_selenium: useSelenium,
+                generate_insights: generateInsights
+            }),
+            success: function(response) {
+                if (response.status === 'success') {
+                    updateProgress(100, 'Scraping completed!');
+                    showResults(response);
+                    
+                    // Show insights if available
+                    if (response.insights && !response.insights.error) {
+                        showInsights(response.insights);
+                    }
+                    
+                    showMessage('🎉 Scraping completed successfully!', 'success');
+                } else {
+                    showMessage('❌ Scraping failed: ' + (response.error || 'Unknown error'), 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                let errorMessage = 'Unknown error';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMessage = xhr.responseJSON.error;
+                }
+                showMessage('❌ Scraping failed: ' + errorMessage, 'error');
+                updateProgress(0, 'Scraping failed');
+            },
+            complete: function() {
+                isScrapingInProgress = false;
+                $('#scrapeBtn').prop('disabled', false).html('<i class="fas fa-play me-2"></i>Start Scraping');
+                setTimeout(() => {
+                    $('#progressContainer').hide();
+                }, 2000);
+            }
+        });
+    }
+
+    function updateProgress(percentage, text) {
+        $('#progressFill').css('width', percentage + '%');
+        $('#progressText').text(text);
+    }
+
+    function showMessage(message, type = 'info') {
+        const messageClass = type === 'error' ? 'error-message' : 
+                           type === 'success' ? 'success-message' : '';
+        
+        const messageHtml = `
+            <div class="loading-message ${messageClass}">
+                ${message}
+            </div>
+        `;
+        
+        $('#loadingMessages').append(messageHtml);
+        
+        // Auto scroll to bottom
+        const container = $('#loadingMessages');
+        container.scrollTop(container[0].scrollHeight);
+    }
+
+    function showResults(response) {
+        currentScrapedData = response.scraped_data || [];
+        
+        // Show results container
+        $('#resultsContainer').show();
+        
+        // Debug: Show all scraped URLs
+        console.log('=== SCRAPED DATA DEBUG ===');
+        currentScrapedData.forEach((page, index) => {
+            console.log(`Page ${index + 1}:`, {
+                url: page.url,
+                title: page.title,
+                wordCount: page.word_count,
+                contentLength: page.content ? page.content.length : 0,
+                contentStart: page.content ? page.content.substring(0, 100) : 'No content'
+            });
+        });
+        console.log('=== END DEBUG ===');
+        
+        // Check for duplicate URLs
+        const urls = currentScrapedData.map(page => page.url);
+        const uniqueUrls = new Set(urls);
+        if (urls.length !== uniqueUrls.size) {
+            console.warn('⚠️ DUPLICATE URLS DETECTED!');
+            const duplicates = urls.filter((url, index) => urls.indexOf(url) !== index);
+            console.warn('Duplicate URLs:', duplicates);
+            showMessage(`⚠️ Warning: Found ${duplicates.length} duplicate URLs in results`, 'error');
+        }
+        
+        // Update summary stats
+        const totalPages = currentScrapedData.length;
+        const successfulPages = currentScrapedData.filter(page => !page.error).length;
+        const totalWords = currentScrapedData.reduce((sum, page) => sum + (page.word_count || 0), 0);
+        const totalLinks = currentScrapedData.reduce((sum, page) => sum + (page.links_found || 0), 0);
+        
+        $('#resultsSummary').html(`
+            <div class="stat-card">
+                <i class="fas fa-file-alt stat-icon"></i>
+                <div class="stat-value">${totalPages}</div>
+                <div class="stat-label">Total Pages</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-check-circle stat-icon success"></i>
+                <div class="stat-value">${successfulPages}</div>
+                <div class="stat-label">Successful</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-font stat-icon"></i>
+                <div class="stat-value">${totalWords.toLocaleString()}</div>
+                <div class="stat-label">Total Words</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-link stat-icon"></i>
+                <div class="stat-value">${totalLinks}</div>
+                <div class="stat-label">Links Found</div>
+            </div>
+        `);
+        
+        // Show results data
+        let resultsHtml = '';
+        currentScrapedData.forEach((page, index) => {
+            const isError = 'error' in page;
+            
+            // Store page data in global store with unique ID
+            const pageDataId = `pageData_${++pageDataCounter}`;
+            if (!isError) {
+                window.pageDataStore[pageDataId] = page;
+                console.log(`Stored page data for ${pageDataId}:`, {
+                    url: page.url,
+                    title: page.title,
+                    wordCount: page.word_count,
+                    contentPreview: (page.content || '').substring(0, 100)
+                });
+            }
+            
+            resultsHtml += `
+                <div class="page-result" style="border: 1px solid var(--border-primary); border-radius: 12px; padding: 20px; margin-bottom: 16px; background: var(--bg-secondary);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                        <h5 style="color: var(--text-primary); margin: 0; flex: 1;" title="Page ${index + 1} - ID: ${pageDataId}">
+                            <i class="fas fa-${isError ? 'times-circle' : 'check-circle'}" style="color: ${isError ? '#f44336' : '#66bb6a'}; margin-right: 8px;"></i>
+                            ${isError ? 'Error' : (page.title || 'No Title')}
+                            <small style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-top: 4px;">
+                                ID: ${pageDataId} | Page ${index + 1}
+                            </small>
+                        </h5>
+                        <div style="display: flex; gap: 8px;">
+                            ${!isError ? `
+                                <button class="view-full-btn" data-page-id="${pageDataId}" data-url="${page.url}" title="View content for ${pageDataId}">
+                                    <i class="fas fa-expand me-1"></i>View Full
+                                </button>
+                                <button class="download-btn json single-page-download" data-page-id="${pageDataId}" title="Download ${pageDataId}">
+                                    <i class="fas fa-download me-1"></i>JSON
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ${isError ? 
+                        `<p style="color: #f44336;">Error: ${page.error}</p>` :
+                        `
+                        <p style="color: var(--text-secondary); margin: 0 0 8px;">
+                            <i class="fas fa-link me-2"></i>
+                            <strong style="color: var(--text-accent);">URL:</strong>
+                            <a href="${page.url}" target="_blank" style="color: var(--text-accent); text-decoration: none; font-weight: 500; margin-left: 8px;">${page.url}</a>
+                        </p>
+                        <div style="display: flex; gap: 16px; margin-bottom: 12px; flex-wrap: wrap;">
+                            <span style="color: var(--text-muted); font-size: 0.9rem;">
+                                <i class="fas fa-font me-1"></i>${page.word_count || 0} words
+                            </span>
+                            <span style="color: var(--text-muted); font-size: 0.9rem;">
+                                <i class="fas fa-link me-1"></i>${page.links_found || 0} links
+                            </span>
+                            <span style="color: var(--text-muted); font-size: 0.9rem;">
+                                <i class="fas fa-heading me-1"></i>${page.headings ? page.headings.length : 0} headings
+                            </span>
+                        </div>
+                        ${page.content ? `
+                            <details style="margin-top: 8px;">
+                                <summary style="cursor: pointer; color: var(--text-accent); font-weight: 600;">
+                                    <i class="fas fa-chevron-right me-2"></i>Preview Content (${pageDataId})
+                                </summary>
+                                <div style="margin-top: 8px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px; max-height: 150px; overflow-y: auto;">
+                                    <strong>Content Preview for ${page.url}:</strong><br>
+                                    ${page.content.substring(0, 300)}${page.content.length > 300 ? '...' : ''}
+                                </div>
+                            </details>
+                        ` : ''}
+                        `
+                    }
+                </div>
+            `;
+        });
+        
+        $('#scrapedPages').html(resultsHtml);
+        
+        // Enable JSON download button
+        $('#downloadJsonBtn').off('click').on('click', function() {
+            downloadAllDataAsJson();
+        });
+        
+        // Scroll to results
+        $('#resultsContainer')[0].scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Add suggestion chips for common use cases
+    const suggestions = [
+        'https://example.com',
+        'https://quotes.toscrape.com',
+        'https://books.toscrape.com',
+        'https://httpbin.org'
+    ];
+    
+    // You can add suggestion chips if needed
+    
+    function showInsights(insights) {
+        // Display the insights container
+        $('#insightsContainer').show();
+        
+        // Render quick stats
+        renderStatsCards(insights.summary_stats);
+        
+        // Render AI analysis
+        renderAnalysis(insights.ai_analysis);
+        
+        // Render breakdown cards
+        renderBreakdownCards(insights.data_breakdown);
+        
+        // Scroll to insights
+        setTimeout(() => {
+            $('html, body').animate({
+                scrollTop: $('#insightsContainer').offset().top - 100
+            }, 600);
+        }, 500);
+    }
+    
+    function renderStatsCards(stats) {
+        const statsCards = [
+            {
+                icon: 'fas fa-file-alt',
+                value: stats.total_pages.toLocaleString(),
+                label: 'Pages Analyzed'
+            },
+            {
+                icon: 'fas fa-font',
+                value: stats.total_words.toLocaleString(),
+                label: 'Total Words'
+            },
+            {
+                icon: 'fas fa-calculator',
+                value: stats.average_words_per_page.toLocaleString(),
+                label: 'Avg Words/Page'
+            },
+            {
+                icon: 'fas fa-link',
+                value: stats.total_internal_links.toLocaleString(),
+                label: 'Internal Links'
+            },
+            {
+                icon: 'fas fa-heading',
+                value: stats.headings_analyzed.toLocaleString(),
+                label: 'Headings Found'
+            },
+            {
+                icon: 'fas fa-tag',
+                value: stats.descriptions_analyzed.toLocaleString(),
+                label: 'Meta Descriptions'
+            }
+        ];
+        
+        let cardsHtml = '';
+        statsCards.forEach(card => {
+            cardsHtml += `
+                <div class="insight-stat-card">
+                    <i class="${card.icon} stat-icon"></i>
+                    <div class="stat-value">${card.value}</div>
+                    <div class="stat-label">${card.label}</div>
+                </div>
+            `;
+        });
+        
+        $('#insightsStats').html(cardsHtml);
+    }
+    
+    function renderAnalysis(analysisText) {
+        // Convert markdown-like formatting to HTML
+        let formattedText = analysisText
+            .replace(/\*\*(.*?)\*\*/g, '<h3>$1</h3>')
+            .replace(/\*(.*?)\*/g, '<h4>$1</h4>')
+            .replace(/- (.*?)(\n|$)/g, '<li>$1</li>')
+            .replace(/(\d+\.\s)(.*?)(\n|$)/g, '<h4>$2</h4>');
+        
+        // Wrap consecutive <li> elements in <ul>
+        formattedText = formattedText.replace(/(<li>.*?<\/li>)+/gs, '<ul>$&</ul>');
+        
+        // Add proper line breaks
+        formattedText = formattedText.replace(/\n\n/g, '<br><br>');
+        formattedText = formattedText.replace(/\n/g, '<br>');
+        
+        $('#aiAnalysisContent').html(formattedText);
+    }
+    
+    function renderBreakdownCards(breakdown) {
+        // Page Classification
+        renderPageClassification(breakdown.page_types);
+        
+        // Content Analysis
+        renderContentAnalysis(breakdown.content_length_distribution);
+        
+        // Top Keywords
+        renderTopKeywords(breakdown.most_common_words);
+        
+        // Heading Structure
+        renderHeadingStructure(breakdown.heading_analysis);
+    }
+    
+    function renderPageClassification(pageTypes) {
+        let classificationHtml = '';
+        const total = Object.values(pageTypes).reduce((a, b) => a + b, 0);
+        
+        Object.entries(pageTypes).forEach(([type, count]) => {
+            if (count > 0) {
+                const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+                classificationHtml += `
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">${type}</span>
+                        <span class="breakdown-value">${count} (${percentage}%)</span>
+                    </div>
+                `;
+            }
+        });
+        
+        if (!classificationHtml) {
+            classificationHtml = '<div class="breakdown-item"><span class="breakdown-label">No classification data available</span></div>';
+        }
+        
+        $('#pageClassification').html(classificationHtml);
+    }
+    
+    function renderContentAnalysis(contentDist) {
+        if (!contentDist || Object.keys(contentDist).length === 0) {
+            $('#contentAnalysis').html('<div class="breakdown-item"><span class="breakdown-label">No content analysis data available</span></div>');
+            return;
+        }
+        
+        const analysisHtml = `
+            <div class="breakdown-item">
+                <span class="breakdown-label">Short Pages (&lt;200 words)</span>
+                <span class="breakdown-value">${contentDist.short_pages || 0}</span>
+            </div>
+            <div class="breakdown-item">
+                <span class="breakdown-label">Medium Pages (200-1000 words)</span>
+                <span class="breakdown-value">${contentDist.medium_pages || 0}</span>
+            </div>
+            <div class="breakdown-item">
+                <span class="breakdown-label">Long Pages (&gt;1000 words)</span>
+                <span class="breakdown-value">${contentDist.long_pages || 0}</span>
+            </div>
+            <div class="breakdown-item">
+                <span class="breakdown-label">Min Words</span>
+                <span class="breakdown-value">${contentDist.min_words || 0}</span>
+            </div>
+            <div class="breakdown-item">
+                <span class="breakdown-label">Max Words</span>
+                <span class="breakdown-value">${contentDist.max_words || 0}</span>
+            </div>
+            <div class="breakdown-item">
+                <span class="breakdown-label">Median Words</span>
+                <span class="breakdown-value">${contentDist.median_words || 0}</span>
+            </div>
+        `;
+        
+        $('#contentAnalysis').html(analysisHtml);
+    }
+    
+    function renderTopKeywords(keywords) {
+        if (!keywords || Object.keys(keywords).length === 0) {
+            $('#topKeywords').html('<div class="breakdown-item"><span class="breakdown-label">No keywords found</span></div>');
+            return;
+        }
+        
+        let keywordsHtml = '';
+        Object.entries(keywords).forEach(([word, count]) => {
+            keywordsHtml += `
+                <span class="keyword-tag">
+                    ${word}
+                    <span class="keyword-count">${count}</span>
+                </span>
+            `;
+        });
+        
+        $('#topKeywords').html(keywordsHtml);
+    }
+    
+    function renderHeadingStructure(headingAnalysis) {
+        if (!headingAnalysis || !headingAnalysis.heading_distribution) {
+            $('#headingStructure').html('<div class="breakdown-item"><span class="breakdown-label">No heading data available</span></div>');
+            return;
+        }
+        
+        const distribution = headingAnalysis.heading_distribution;
+        const maxCount = Math.max(...Object.values(distribution));
+        
+        let headingHtml = '';
+        ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].forEach(level => {
+            const count = distribution[level] || 0;
+            const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
+            
+            headingHtml += `
+                <div class="heading-bar">
+                    <span class="heading-level">${level.toUpperCase()}</span>
+                    <div class="heading-progress">
+                        <div class="heading-fill" style="width: ${percentage}%"></div>
+                    </div>
+                    <span class="heading-count">${count}</span>
+                </div>
+            `;
+        });
+        
+        $('#headingStructure').html(headingHtml);
+    }
+
+    // Page Discovery Functionality
+    $('#discoverBtn').on('click', function() {
+        const url = $('#urlInput').val().trim();
+        const useSelenium = $('#useSelenium').is(':checked');
+
+        if (!url) {
+            showMessage('Please enter a valid URL first', 'error');
+            return;
+        }
+
+        startPageDiscovery(url, useSelenium);
+    });
+
+    function startPageDiscovery(url, useSelenium) {
+        // Update UI
+        $('#discoverBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Discovering...');
+        $('#loadingMessages').empty();
+        $('#discoveryContainer').hide();
+        
+        showMessage(`🔍 Starting page discovery for ${url}`, 'info');
+        
+        // Make API request
+        $.ajax({
+            url: '/api/discover-pages',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                url: url,
+                use_selenium: useSelenium
+            }),
+            success: function(response) {
+                if (response.status === 'success') {
+                    showDiscoveredPages(response);
+                    showMessage(`🎉 Discovery completed! Found ${response.total_pages} pages`, 'success');
+                } else {
+                    showMessage('❌ Discovery failed: ' + (response.error || 'Unknown error'), 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                let errorMessage = 'Unknown error';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMessage = xhr.responseJSON.error;
+                }
+                showMessage('❌ Discovery failed: ' + errorMessage, 'error');
+            },
+            complete: function() {
+                $('#discoverBtn').prop('disabled', false).html('<i class="fas fa-search me-2"></i>Discover All Pages First');
+            }
+        });
+    }
+
+    function showDiscoveredPages(response) {
+        // Show discovery container
+        $('#discoveryContainer').show();
+        
+        // Display statistics
+        const statsHtml = `
+            <div class="stat-card">
+                <span class="stat-number">${response.total_pages}</span>
+                <span class="stat-label">Total Pages</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">${response.categorized_pages.homepage.length}</span>
+                <span class="stat-label">Homepage</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">${response.categorized_pages.blog.length}</span>
+                <span class="stat-label">Blog Posts</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">${response.categorized_pages.product.length}</span>
+                <span class="stat-label">Products</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">${response.categorized_pages.other.length}</span>
+                <span class="stat-label">Other</span>
+            </div>
+        `;
+        $('#discoveryStats').html(statsHtml);
+        
+        // Display categorized pages
+        displayCategorizedPages(response.categorized_pages);
+        
+        // Setup event handlers
+        setupDiscoveryEventHandlers();
+        
+        // Scroll to discovery section
+        $('html, body').animate({
+            scrollTop: $('#discoveryContainer').offset().top - 100
+        }, 600);
+    }
+
+    function displayCategorizedPages(categorizedPages) {
+        let categoriesHtml = '';
+        
+        const categoryIcons = {
+            homepage: 'fas fa-home',
+            blog: 'fas fa-blog',
+            product: 'fas fa-shopping-bag',
+            about: 'fas fa-info-circle',
+            contact: 'fas fa-envelope',
+            other: 'fas fa-file'
+        };
+        
+        Object.entries(categorizedPages).forEach(([category, pages]) => {
+            if (pages.length > 0) {
+                const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+                const icon = categoryIcons[category] || 'fas fa-file';
+                
+                categoriesHtml += `
+                    <div class="category-section">
+                        <div class="category-header" data-category="${category}">
+                            <div class="category-title">
+                                <i class="${icon}"></i>
+                                ${categoryName}
+                                <span class="category-count">${pages.length}</span>
+                            </div>
+                            <i class="fas fa-chevron-right expand-icon"></i>
+                        </div>
+                        <div class="category-content" data-category="${category}">
+                            ${generatePageItems(pages)}
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        
+        $('#pageCategories').html(categoriesHtml);
+    }
+
+    function generatePageItems(pages) {
+        return pages.map(url => {
+            const urlPath = new URL(url).pathname;
+            return `
+                <div class="page-item">
+                    <input type="checkbox" class="page-checkbox" data-url="${url}">
+                    <div class="page-info">
+                        <a href="${url}" target="_blank" class="page-url">${url}</a>
+                        <div class="page-path">${urlPath}</div>
+                    </div>
+                    <div class="page-actions">
+                        <button class="scrape-single-btn" data-url="${url}">
+                            <i class="fas fa-download me-1"></i>Scrape
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function setupDiscoveryEventHandlers() {
+        // Category expansion
+        $('.category-header').off('click').on('click', function() {
+            const category = $(this).data('category');
+            const content = $(`.category-content[data-category="${category}"]`);
+            const header = $(this);
+            
+            if (content.hasClass('expanded')) {
+                content.removeClass('expanded');
+                header.removeClass('expanded');
+            } else {
+                content.addClass('expanded');
+                header.addClass('expanded');
+            }
+        });
+        
+        // Select all / Deselect all
+        $('#selectAllBtn').off('click').on('click', function() {
+            $('.page-checkbox').prop('checked', true);
+            updateScrapeSelectedButton();
+        });
+        
+        $('#deselectAllBtn').off('click').on('click', function() {
+            $('.page-checkbox').prop('checked', false);
+            updateScrapeSelectedButton();
+        });
+        
+        // Individual checkbox changes
+        $('.page-checkbox').off('change').on('change', function() {
+            updateScrapeSelectedButton();
+        });
+        
+        // Individual page scraping
+        $('.scrape-single-btn').off('click').on('click', function() {
+            const url = $(this).data('url');
+            const useSelenium = $('#useSelenium').is(':checked');
+            scrapeSinglePage(url, useSelenium);
+        });
+        
+        // Bulk scraping
+        $('#scrapeSelectedBtn').off('click').on('click', function() {
+            const selectedUrls = $('.page-checkbox:checked').map(function() {
+                return $(this).data('url');
+            }).get();
+            
+            const useSelenium = $('#useSelenium').is(':checked');
+            const generateInsights = $('#generateInsights').is(':checked');
+            
+            scrapeMultiplePages(selectedUrls, useSelenium, generateInsights);
+        });
+    }
+
+    function updateScrapeSelectedButton() {
+        const selectedCount = $('.page-checkbox:checked').length;
+        const button = $('#scrapeSelectedBtn');
+        
+        if (selectedCount > 0) {
+            button.prop('disabled', false);
+            button.html(`<i class="fas fa-download me-2"></i>Scrape Selected (${selectedCount})`);
+        } else {
+            button.prop('disabled', true);
+            button.html('<i class="fas fa-download me-2"></i>Scrape Selected Pages');
+        }
+    }
+
+    function scrapeSinglePage(url, useSelenium) {
+        showMessage(`🔍 Scraping individual page: ${url}`, 'info');
+        
+        $.ajax({
+            url: '/api/scrape-single-page',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                url: url,
+                use_selenium: useSelenium
+            }),
+            success: function(response) {
+                if (response.status === 'success') {
+                    showSinglePageResult(response.page_data);
+                    showMessage(`✅ Successfully scraped: ${url}`, 'success');
+                } else {
+                    showMessage(`❌ Failed to scrape ${url}: ${response.error}`, 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                showMessage(`❌ Error scraping ${url}: ${error}`, 'error');
+            }
+        });
+    }
+
+    function scrapeMultiplePages(urls, useSelenium, generateInsights) {
+        if (urls.length === 0) {
+            showMessage('No pages selected for scraping', 'error');
+            return;
+        }
+        
+        showMessage(`🚀 Starting bulk scrape of ${urls.length} pages...`, 'info');
+        $('#scrapeSelectedBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Scraping...');
+        
+        $.ajax({
+            url: '/api/scrape-multiple-pages',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                urls: urls,
+                use_selenium: useSelenium,
+                generate_insights: generateInsights
+            }),
+            success: function(response) {
+                if (response.status === 'success') {
+                    showResults(response);
+                    
+                    // Show insights if available
+                    if (response.insights && !response.insights.error) {
+                        showInsights(response.insights);
+                    }
+                    
+                    showMessage(`🎉 Bulk scraping completed! Processed ${urls.length} pages`, 'success');
+                } else {
+                    showMessage(`❌ Bulk scraping failed: ${response.error}`, 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                showMessage(`❌ Bulk scraping error: ${error}`, 'error');
+            },
+            complete: function() {
+                $('#scrapeSelectedBtn').prop('disabled', false);
+                updateScrapeSelectedButton();
+            }
+        });
+    }
+
+    function showSinglePageResult(pageData) {
+        // Create a modal or dedicated section to show single page results
+        const isError = 'error' in pageData;
+        
+        // Store page data in global store with unique ID
+        const pageDataId = `pageData_${++pageDataCounter}`;
+        if (!isError) {
+            window.pageDataStore[pageDataId] = pageData;
+        }
+        
+        const resultHtml = `
+            <div class="single-page-result" style="margin: 20px 0; padding: 20px; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-primary);">
+                <h4 style="color: var(--text-primary); margin-bottom: 12px;">
+                    <i class="fas fa-${isError ? 'times-circle' : 'check-circle'}" style="color: ${isError ? '#f44336' : '#66bb6a'}; margin-right: 8px;"></i>
+                    Single Page Scrape Result
+                </h4>
+                ${isError ? 
+                    `<p style="color: #f44336;">Error: ${pageData.error}</p>` :
+                    `
+                    <div class="content-meta" style="margin-bottom: 16px;">
+                        <div class="meta-item">
+                            <div class="meta-label">Title</div>
+                            <div class="meta-value">${pageData.title || 'No title'}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Word Count</div>
+                            <div class="meta-value">${pageData.word_count || 0}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Links Found</div>
+                            <div class="meta-value">${pageData.links_found || 0}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Headings</div>
+                            <div class="meta-value">${pageData.headings ? pageData.headings.length : 0}</div>
+                        </div>
+                    </div>
+                    <div class="meta-item" style="margin-bottom: 12px;">
+                        <div class="meta-label">URL</div>
+                        <div class="meta-value">
+                            <a href="${pageData.url}" target="_blank" style="color: var(--text-accent); text-decoration: none;">${pageData.url}</a>
+                        </div>
+                    </div>
+                    ${pageData.meta_description ? `
+                    <div class="meta-item" style="margin-bottom: 12px;">
+                        <div class="meta-label">Description</div>
+                        <div class="meta-value">${pageData.meta_description}</div>
+                    </div>
+                    ` : ''}
+                    <details style="margin-top: 12px;">
+                        <summary style="cursor: pointer; color: var(--text-accent); font-weight: 600;">
+                            <i class="fas fa-chevron-right me-2"></i>View Content Preview
+                        </summary>
+                        <div style="margin-top: 12px; padding: 16px; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-primary);">
+                            <div class="content-text" style="max-height: 200px; overflow-y: auto; margin-bottom: 12px;">
+                                ${(pageData.content || '').substring(0, 1000)}${pageData.content && pageData.content.length > 1000 ? '...' : ''}
+                            </div>
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                <button class="view-full-btn" data-page-id="${pageDataId}" data-url="${pageData.url}">
+                                    <i class="fas fa-expand me-2"></i>View Full Content
+                                </button>
+                                <button class="download-btn json single-page-download" data-page-id="${pageDataId}">
+                                    <i class="fas fa-download me-2"></i>Download JSON
+                                </button>
+                            </div>
+                        </div>
+                    </details>
+                    `
+                }
+            </div>
+        `;
+        
+        $('#loadingMessages').append(resultHtml);
+        
+        // Auto scroll to the result
+        const container = $('#loadingMessages');
+        container.scrollTop(container[0].scrollHeight);
+    }
+
+    // Modal event handlers
+    $('#closeModal, .modal-overlay').on('click', function(e) {
+        if (e.target === this) {
+            $('#fullContentModal').fadeOut(300);
+        }
+    });
+
+    // Prevent modal from closing when clicking inside modal content
+    $('.modal-content').on('click', function(e) {
+        e.stopPropagation();
+    });
+
+    // Close modal with Escape key
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && $('#fullContentModal').is(':visible')) {
+            $('#fullContentModal').fadeOut(300);
+        }
+    });
+
+    // Event delegation for dynamically created buttons
+    $(document).on('click', '.view-full-btn', function(e) {
+        e.preventDefault();
+        console.log('View Full Content button clicked');
+        
+        try {
+            const $btn = $(this);
+            const pageId = $btn.data('page-id') || $btn.attr('data-page-id');
+            const url = $btn.data('url') || $btn.attr('data-url');
+            
+            console.log('Button element:', $btn[0]);
+            console.log('Page ID:', pageId);
+            console.log('URL:', url);
+            console.log('Data store keys:', Object.keys(window.pageDataStore));
+            
+            if (pageId) {
+                window.viewFullContent(url, pageId);
+            } else {
+                console.error('No page ID found on button');
+                showMessage('❌ No page ID available', 'error');
+            }
+        } catch (error) {
+            console.error('Error handling view full content click:', error);
+            showMessage('❌ Error handling view content: ' + error.message, 'error');
+        }
+    });
+
+    $(document).on('click', '.single-page-download', function(e) {
+        e.preventDefault();
+        console.log('Download single page JSON button clicked');
+        
+        try {
+            const $btn = $(this);
+            const pageId = $btn.data('page-id') || $btn.attr('data-page-id');
+            
+            console.log('Button element:', $btn[0]);
+            console.log('Page ID:', pageId);
+            console.log('Data store keys:', Object.keys(window.pageDataStore));
+            
+            if (pageId) {
+                window.downloadSinglePageJson(pageId);
+            } else {
+                console.error('No page ID found on button');
+                showMessage('❌ No page ID available', 'error');
+            }
+        } catch (error) {
+            console.error('Error handling download click:', error);
+            showMessage('❌ Error handling download: ' + error.message, 'error');
+        }
+    });
+
+    $(document).on('click', '#downloadJsonBtn', function(e) {
+        e.preventDefault();
+        console.log('Download all data JSON button clicked');
+        
+        try {
+            window.downloadAllDataAsJson();
+        } catch (error) {
+            console.error('Error handling download all click:', error);
+        }
+    });
+
+    $(document).on('click', '#debugDataStoreBtn', function(e) {
+        e.preventDefault();
+        console.log('=== DATA STORE DEBUG ===');
+        console.log('Current scraped data:', currentScrapedData);
+        console.log('Data store contents:', window.pageDataStore);
+        console.log('Page data counter:', pageDataCounter);
+        console.log('=== END DATA STORE DEBUG ===');
+        
+        // Also show a summary in the UI
+        const storeKeys = Object.keys(window.pageDataStore);
+        let debugMessage = `Data Store Summary:\n- ${storeKeys.length} entries\n- Counter: ${pageDataCounter}\n`;
+        storeKeys.forEach(key => {
+            const data = window.pageDataStore[key];
+            debugMessage += `- ${key}: ${data.url} (${data.title})\n`;
+        });
+        
+        alert(debugMessage);
+        showMessage('✅ Debug data store contents logged to console', 'success');
+    });
+});
+</script>
+{% endblock %} 

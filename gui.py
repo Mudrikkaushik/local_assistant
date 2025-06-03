@@ -1,7 +1,8 @@
 import sys
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                             QHBoxLayout, QTextEdit, QLineEdit, QPushButton, 
-                            QLabel, QProgressBar, QFrame, QScrollArea, QTabWidget, QFileDialog, QGroupBox)
+                            QLabel, QProgressBar, QFrame, QScrollArea, QTabWidget, QFileDialog, QGroupBox, 
+                            QSpinBox, QCheckBox, QComboBox)
 from PySide6.QtCore import Qt, QThread, Signal, QPropertyAnimation, QEasingCurve, QSize, QTimer
 from PySide6.QtGui import QFont, QIcon, QColor, QPalette, QLinearGradient, QGradient, QPainter, QBrush, QPixmap
 import os
@@ -28,6 +29,7 @@ import json
 import csv
 from datetime import datetime
 import markdown
+from logic.web_scraper import WebScraper
 
 class WorkerThread(QThread):
     update_signal = Signal(str)
@@ -291,6 +293,60 @@ class WorkerThread(QThread):
             self.update_signal.emit(f"❌ Error: {str(e)}")
             self.finished_signal.emit()
 
+class WebScrapingWorkerThread(QThread):
+    update_signal = Signal(str)
+    progress_signal = Signal(int)
+    finished_signal = Signal()
+    page_scraped_signal = Signal(dict)  # Signal for each page scraped
+
+    def __init__(self, start_url, max_pages, use_selenium):
+        super().__init__()
+        self.start_url = start_url
+        self.max_pages = max_pages
+        self.use_selenium = use_selenium
+        self.scraper = WebScraper()
+        self.scraped_data = []
+
+    def run(self):
+        try:
+            def update_callback(message):
+                self.update_signal.emit(message)
+            
+            # Start scraping
+            self.scraped_data = self.scraper.scrape_website(
+                self.start_url, 
+                self.max_pages, 
+                self.use_selenium, 
+                update_callback
+            )
+            
+            # Save data automatically
+            if self.scraped_data:
+                csv_file = self.scraper.save_to_csv()
+                json_file = self.scraper.save_to_json()
+                
+                if csv_file:
+                    self.update_signal.emit(f"💾 Data saved to CSV: {csv_file}")
+                if json_file:
+                    self.update_signal.emit(f"💾 Data saved to JSON: {json_file}")
+                
+                # Emit summary
+                total_pages = len(self.scraped_data)
+                successful_pages = len([p for p in self.scraped_data if 'error' not in p])
+                error_pages = total_pages - successful_pages
+                
+                self.update_signal.emit(f"📊 Summary: {successful_pages} pages scraped successfully, {error_pages} errors")
+                
+                # Emit each page data for display
+                for page_data in self.scraped_data:
+                    self.page_scraped_signal.emit(page_data)
+            
+            self.finished_signal.emit()
+            
+        except Exception as e:
+            self.update_signal.emit(f"❌ Scraping Error: {str(e)}")
+            self.finished_signal.emit()
+
 class GradientLabel(QLabel):
     def __init__(self, text, parent=None):
         super().__init__(text, parent)
@@ -523,6 +579,14 @@ class MainWindow(QMainWindow):
         self.setup_chatbot_tab(chatbot_layout)
         self.tabs.addTab(chatbot_tab, "💬 Chatbot")
 
+        # Web Scraper Tab
+        scraper_tab = QWidget()
+        scraper_layout = QVBoxLayout(scraper_tab)
+        scraper_layout.setSpacing(20)
+        scraper_layout.setContentsMargins(30, 30, 30, 30)
+        self.setup_scraper_tab(scraper_layout)
+        self.tabs.addTab(scraper_tab, "🌐 Web Scraper")
+
     def setup_shopping_tab(self, layout):
         # Header Frame with gradient background
         header_frame = QFrame()
@@ -742,6 +806,363 @@ class MainWindow(QMainWindow):
                 self.add_chat_message(f"Failed to read file: {str(e)}", is_user=False)
         else:
             self.chat_file_content = None
+
+    def setup_scraper_tab(self, layout):
+        # Header Frame with gradient background
+        header_frame = QFrame()
+        header_frame.setObjectName("scraperHeaderFrame")
+        header_layout = QVBoxLayout(header_frame)
+        header_layout.setSpacing(15)
+        
+        # Title with gradient effect
+        title = GradientLabel("Web Scraper")
+        header_layout.addWidget(title)
+
+        # Description with icon
+        description_container = QHBoxLayout()
+        description_icon = QLabel("🌐")
+        description_icon.setStyleSheet("font-size: 24px;")
+        description_container.addWidget(description_icon)
+        
+        description = QLabel("Scrape any website page by page")
+        description.setFont(QFont('Segoe UI', 14))
+        description.setStyleSheet("color: #7f8c8d;")
+        description_container.addWidget(description)
+        description_container.addStretch()
+        
+        header_layout.addLayout(description_container)
+        layout.addWidget(header_frame)
+
+        # Configuration Frame
+        config_frame = QFrame()
+        config_frame.setObjectName("configFrame")
+        config_layout = QVBoxLayout(config_frame)
+        config_layout.setSpacing(15)
+        
+        # URL Input
+        url_layout = QHBoxLayout()
+        url_icon = QLabel("🔗")
+        url_icon.setStyleSheet("font-size: 20px;")
+        url_layout.addWidget(url_icon)
+        
+        self.url_input = QLineEdit()
+        self.url_input.setPlaceholderText("Enter website URL (e.g., https://example.com)")
+        self.url_input.setFont(QFont('Segoe UI', 11))
+        self.url_input.setMinimumHeight(45)
+        self.url_input.setStyleSheet("""
+            QLineEdit {
+                padding: 10px 15px;
+                border: 2px solid #e0e0e0;
+                border-radius: 10px;
+                background-color: white;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border: 2px solid #3498db;
+            }
+        """)
+        url_layout.addWidget(self.url_input)
+        config_layout.addLayout(url_layout)
+        
+        # Options Row
+        options_layout = QHBoxLayout()
+        
+        # Max Pages Setting
+        pages_group = QGroupBox("Max Pages")
+        pages_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #e0e0e0;
+                border-radius: 5px;
+                margin-top: 10px;
+                padding: 5px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px 0 5px;
+            }
+        """)
+        pages_layout = QHBoxLayout(pages_group)
+        self.max_pages_spinbox = QSpinBox()
+        self.max_pages_spinbox.setMinimum(1)
+        self.max_pages_spinbox.setMaximum(200)
+        self.max_pages_spinbox.setValue(20)
+        self.max_pages_spinbox.setStyleSheet("""
+            QSpinBox {
+                padding: 5px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                font-size: 14px;
+                min-width: 60px;
+            }
+        """)
+        pages_layout.addWidget(self.max_pages_spinbox)
+        options_layout.addWidget(pages_group)
+        
+        # Scraping Method
+        method_group = QGroupBox("Scraping Method")
+        method_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #e0e0e0;
+                border-radius: 5px;
+                margin-top: 10px;
+                padding: 5px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px 0 5px;
+            }
+        """)
+        method_layout = QHBoxLayout(method_group)
+        self.use_selenium_checkbox = QCheckBox("Use Selenium (for JS-heavy sites)")
+        self.use_selenium_checkbox.setStyleSheet("font-size: 12px;")
+        method_layout.addWidget(self.use_selenium_checkbox)
+        options_layout.addWidget(method_group)
+        
+        options_layout.addStretch()
+        config_layout.addLayout(options_layout)
+        
+        # Start Scraping Button
+        button_layout = QHBoxLayout()
+        self.scrape_button = AnimatedButton("🚀 Start Scraping")
+        self.scrape_button.setFont(QFont('Segoe UI', 12))
+        self.scrape_button.setStyleSheet("""
+            QPushButton {
+                background-color: #27ae60;
+                color: white;
+                border: none;
+                border-radius: 10px;
+                padding: 12px 30px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #229954;
+            }
+            QPushButton:disabled {
+                background-color: #bdc3c7;
+            }
+        """)
+        self.scrape_button.clicked.connect(self.start_scraping)
+        button_layout.addWidget(self.scrape_button)
+        button_layout.addStretch()
+        config_layout.addLayout(button_layout)
+        
+        layout.addWidget(config_frame)
+
+        # Progress bar
+        self.scraper_progress_bar = QProgressBar()
+        self.scraper_progress_bar.setVisible(False)
+        self.scraper_progress_bar.setStyleSheet("""
+            QProgressBar {
+                border: 2px solid #e0e0e0;
+                border-radius: 10px;
+                text-align: center;
+                height: 25px;
+                background-color: white;
+            }
+            QProgressBar::chunk {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #27ae60, stop:1 #2ecc71);
+                border-radius: 8px;
+            }
+        """)
+        layout.addWidget(self.scraper_progress_bar)
+
+        # Results area
+        self.scraper_scroll_area = QScrollArea()
+        self.scraper_scroll_area.setWidgetResizable(True)
+        self.scraper_scroll_area.setStyleSheet("""
+            QScrollArea {
+                border: none;
+                background-color: transparent;
+            }
+            QScrollBar:vertical {
+                border: none;
+                background: #f0f0f0;
+                width: 10px;
+                margin: 0px;
+            }
+            QScrollBar::handle:vertical {
+                background: #c0c0c0;
+                min-height: 20px;
+                border-radius: 5px;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        """)
+        
+        self.scraper_results_widget = QWidget()
+        self.scraper_results_layout = QVBoxLayout(self.scraper_results_widget)
+        self.scraper_results_layout.setSpacing(15)
+        self.scraper_scroll_area.setWidget(self.scraper_results_widget)
+        layout.addWidget(self.scraper_scroll_area)
+
+        # Set frame styles
+        header_frame.setStyleSheet("""
+            QFrame#scraperHeaderFrame {
+                background-color: white;
+                border-radius: 20px;
+                padding: 30px;
+                margin-bottom: 20px;
+            }
+        """)
+        
+        config_frame.setStyleSheet("""
+            QFrame#configFrame {
+                background-color: white;
+                border-radius: 15px;
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+        """)
+
+    def start_scraping(self):
+        url = self.url_input.text().strip()
+        if not url:
+            self.add_scraper_message("❌ Please enter a valid URL")
+            return
+        
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+            self.url_input.setText(url)
+        
+        max_pages = self.max_pages_spinbox.value()
+        use_selenium = self.use_selenium_checkbox.isChecked()
+        
+        self.scrape_button.setEnabled(False)
+        self.scraper_progress_bar.setVisible(True)
+        self.scraper_progress_bar.setValue(0)
+        
+        # Clear previous results
+        for i in reversed(range(self.scraper_results_layout.count())): 
+            widget = self.scraper_results_layout.itemAt(i).widget()
+            if widget:
+                widget.setParent(None)
+        
+        # Start scraping
+        self.scraper_worker = WebScrapingWorkerThread(url, max_pages, use_selenium)
+        self.scraper_worker.update_signal.connect(self.add_scraper_message)
+        self.scraper_worker.page_scraped_signal.connect(self.add_scraped_page)
+        self.scraper_worker.finished_signal.connect(self.scraping_finished)
+        self.scraper_worker.start()
+    
+    def add_scraper_message(self, message):
+        """Add a status message to the scraper results"""
+        label = QLabel(message)
+        label.setWordWrap(True)
+        label.setStyleSheet("""
+            color: #2c3e50;
+            font-size: 13px;
+            padding: 8px;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+            margin: 2px;
+        """)
+        self.scraper_results_layout.addWidget(label)
+        
+        # Auto scroll to bottom
+        QApplication.processEvents()
+        self.scraper_scroll_area.verticalScrollBar().setValue(
+            self.scraper_scroll_area.verticalScrollBar().maximum()
+        )
+    
+    def add_scraped_page(self, page_data):
+        """Add a scraped page card to results"""
+        card = QFrame()
+        card.setObjectName("pageCard")
+        card_layout = QVBoxLayout(card)
+        card_layout.setSpacing(10)
+        
+        # Page title and URL
+        title_layout = QHBoxLayout()
+        
+        # Status icon
+        if 'error' in page_data:
+            status_icon = QLabel("❌")
+            title_text = f"Error: {page_data.get('url', 'Unknown URL')}"
+            content_text = page_data.get('error', 'Unknown error')
+        else:
+            status_icon = QLabel("✅")
+            title_text = page_data.get('title', 'No Title')
+            content_text = page_data.get('content', '')[:300] + "..." if len(page_data.get('content', '')) > 300 else page_data.get('content', '')
+        
+        status_icon.setStyleSheet("font-size: 20px;")
+        title_layout.addWidget(status_icon)
+        
+        title_label = QLabel(title_text)
+        title_label.setFont(QFont('Segoe UI', 14, QFont.Weight.Bold))
+        title_label.setWordWrap(True)
+        title_label.setStyleSheet("color: #2c3e50;")
+        title_layout.addWidget(title_label, 1)
+        
+        card_layout.addLayout(title_layout)
+        
+        # URL
+        if 'url' in page_data:
+            url_label = QLabel(f"🔗 {page_data['url']}")
+            url_label.setStyleSheet("color: #3498db; font-size: 12px;")
+            url_label.setWordWrap(True)
+            card_layout.addWidget(url_label)
+        
+        # Content preview
+        content_label = QLabel(content_text)
+        content_label.setWordWrap(True)
+        content_label.setStyleSheet("color: #7f8c8d; font-size: 12px; padding: 5px;")
+        card_layout.addWidget(content_label)
+        
+        # Stats (if not error)
+        if 'error' not in page_data:
+            stats_layout = QHBoxLayout()
+            
+            if 'word_count' in page_data:
+                words_label = QLabel(f"📝 {page_data['word_count']} words")
+                words_label.setStyleSheet("font-size: 11px; color: #95a5a6;")
+                stats_layout.addWidget(words_label)
+            
+            if 'links_found' in page_data:
+                links_label = QLabel(f"🔗 {page_data['links_found']} links")
+                links_label.setStyleSheet("font-size: 11px; color: #95a5a6;")
+                stats_layout.addWidget(links_label)
+            
+            if 'timestamp' in page_data:
+                time_label = QLabel(f"⏰ {page_data['timestamp']}")
+                time_label.setStyleSheet("font-size: 11px; color: #95a5a6;")
+                stats_layout.addWidget(time_label)
+            
+            stats_layout.addStretch()
+            card_layout.addLayout(stats_layout)
+        
+        card.setStyleSheet("""
+            QFrame#pageCard {
+                background-color: white;
+                border-radius: 12px;
+                border: 1px solid #e0e0e0;
+                padding: 15px;
+                margin: 5px;
+            }
+            QFrame#pageCard:hover {
+                border: 2px solid #27ae60;
+                background-color: #f8f9fa;
+            }
+        """)
+        
+        self.scraper_results_layout.addWidget(card)
+        
+        # Auto scroll to bottom
+        QApplication.processEvents()
+        self.scraper_scroll_area.verticalScrollBar().setValue(
+            self.scraper_scroll_area.verticalScrollBar().maximum()
+        )
+    
+    def scraping_finished(self):
+        """Called when scraping is complete"""
+        self.scrape_button.setEnabled(True)
+        self.scraper_progress_bar.setVisible(False)
+        self.add_scraper_message("🎉 Scraping completed! Check the 'results' folder for saved files.")
 
     def start_search(self):
         query = self.query_input.text().strip()

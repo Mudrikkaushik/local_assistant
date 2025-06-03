@@ -22,6 +22,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import re
 import threading
 import pyautogui
+from logic.web_scraper import WebScraper
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'
@@ -520,6 +521,282 @@ def get_status():
                 "file_operations": True
             }
         })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/web-scraper')
+def web_scraper_page():
+    """Web scraper interface"""
+    return render_template('web_scraper.html')
+
+@app.route('/api/scrape', methods=['POST'])
+def start_scraping():
+    """Start web scraping process"""
+    data = request.get_json()
+    url = data.get('url', '').strip()
+    max_pages = int(data.get('max_pages', 20))
+    use_selenium = data.get('use_selenium', False)
+    generate_insights = data.get('generate_insights', True)
+    
+    if not url:
+        return jsonify({"error": "URL is required"}), 400
+    
+    # Add https:// if not present
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    try:
+        # Create scraper instance
+        scraper = WebScraper()
+        
+        # Store progress updates
+        updates = []
+        scraped_pages = []
+        
+        def update_callback(message):
+            updates.append({
+                "message": message,
+                "timestamp": datetime.now().strftime("%H:%M:%S")
+            })
+        
+        # Start scraping
+        scraped_data = scraper.scrape_website(
+            url, 
+            max_pages, 
+            use_selenium, 
+            update_callback
+        )
+        
+        # Save data
+        csv_file = None
+        json_file = None
+        insights = None
+        
+        if scraped_data:
+            csv_file = scraper.save_to_csv()
+            json_file = scraper.save_to_json()
+            
+            # Generate insights if requested
+            if generate_insights:
+                updates.append({
+                    "message": "🧠 Generating AI insights from scraped data...",
+                    "timestamp": datetime.now().strftime("%H:%M:%S")
+                })
+                
+                insights = scraper.analyze_scraped_data(scraped_data, os.getenv('GEMINI_API_KEY'))
+                
+                if insights and 'error' not in insights:
+                    updates.append({
+                        "message": "✨ AI insights generated successfully!",
+                        "timestamp": datetime.now().strftime("%H:%M:%S")
+                    })
+                else:
+                    updates.append({
+                        "message": f"⚠️ Insights generation failed: {insights.get('error', 'Unknown error') if insights else 'Unknown error'}",
+                        "timestamp": datetime.now().strftime("%H:%M:%S")
+                    })
+        
+        # Calculate summary
+        total_pages = len(scraped_data)
+        successful_pages = len([p for p in scraped_data if 'error' not in p])
+        error_pages = total_pages - successful_pages
+        
+        return jsonify({
+            "status": "success",
+            "summary": {
+                "total_pages": total_pages,
+                "successful_pages": successful_pages,
+                "error_pages": error_pages,
+                "csv_file": csv_file,
+                "json_file": json_file
+            },
+            "updates": updates,
+            "scraped_data": scraped_data[:10],  # Return first 10 pages for preview
+            "insights": insights  # Include insights in response
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/scrape-progress/<scrape_id>')
+def get_scraping_progress(scrape_id):
+    """Get scraping progress (for future real-time updates)"""
+    # This could be implemented with WebSockets or Server-Sent Events
+    # For now, return a simple response
+    return jsonify({"status": "completed", "progress": 100})
+
+@app.route('/api/analyze-insights', methods=['POST'])
+def generate_insights():
+    """Generate insights from existing scraped data"""
+    data = request.get_json()
+    scraped_data = data.get('scraped_data', [])
+    
+    if not scraped_data:
+        return jsonify({"error": "No scraped data provided"}), 400
+    
+    try:
+        scraper = WebScraper()
+        insights = scraper.analyze_scraped_data(scraped_data, os.getenv('GEMINI_API_KEY'))
+        
+        if insights and 'error' not in insights:
+            return jsonify({
+                "status": "success",
+                "insights": insights
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "error": insights.get('error', 'Unknown error') if insights else 'Analysis failed'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/discover-pages', methods=['POST'])
+def discover_pages():
+    """Discover all pages on a website without scraping content"""
+    data = request.get_json()
+    url = data.get('url', '').strip()
+    use_selenium = data.get('use_selenium', False)
+    
+    if not url:
+        return jsonify({"error": "URL is required"}), 400
+    
+    # Add https:// if not present
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    try:
+        # Create scraper instance
+        scraper = WebScraper()
+        
+        # Store progress updates
+        updates = []
+        
+        def update_callback(message):
+            updates.append({
+                "message": message,
+                "timestamp": datetime.now().strftime("%H:%M:%S")
+            })
+        
+        # Discover all pages
+        discovered_pages = scraper.discover_all_pages(url, use_selenium, update_callback)
+        
+        # Categorize pages by type (for better organization)
+        categorized_pages = {
+            "homepage": [],
+            "blog": [],
+            "product": [],
+            "about": [],
+            "contact": [],
+            "other": []
+        }
+        
+        for page_url in discovered_pages:
+            url_lower = page_url.lower()
+            
+            if page_url == url or url_lower.endswith('/') and len(url_lower.split('/')) <= 4:
+                categorized_pages["homepage"].append(page_url)
+            elif any(word in url_lower for word in ['blog', 'news', 'article', 'post']):
+                categorized_pages["blog"].append(page_url)
+            elif any(word in url_lower for word in ['product', 'item', 'shop']):
+                categorized_pages["product"].append(page_url)
+            elif any(word in url_lower for word in ['about', 'company', 'team']):
+                categorized_pages["about"].append(page_url)
+            elif any(word in url_lower for word in ['contact', 'support', 'help']):
+                categorized_pages["contact"].append(page_url)
+            else:
+                categorized_pages["other"].append(page_url)
+        
+        return jsonify({
+            "status": "success",
+            "total_pages": len(discovered_pages),
+            "discovered_pages": discovered_pages,
+            "categorized_pages": categorized_pages,
+            "updates": updates
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/scrape-single-page', methods=['POST'])
+def scrape_single_page():
+    """Scrape a single specific page"""
+    data = request.get_json()
+    url = data.get('url', '').strip()
+    use_selenium = data.get('use_selenium', False)
+    
+    if not url:
+        return jsonify({"error": "URL is required"}), 400
+    
+    try:
+        # Create scraper instance
+        scraper = WebScraper()
+        
+        # Scrape the single page
+        page_data = scraper.scrape_single_page(url, use_selenium)
+        
+        return jsonify({
+            "status": "success",
+            "page_data": page_data
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/scrape-multiple-pages', methods=['POST'])
+def scrape_multiple_pages():
+    """Scrape multiple selected pages"""
+    data = request.get_json()
+    urls = data.get('urls', [])
+    use_selenium = data.get('use_selenium', False)
+    generate_insights = data.get('generate_insights', False)
+    
+    if not urls:
+        return jsonify({"error": "URLs list is required"}), 400
+    
+    try:
+        # Create scraper instance
+        scraper = WebScraper()
+        scraped_data = []
+        
+        for i, url in enumerate(urls):
+            # Scrape each page
+            page_data = scraper.scrape_single_page(url, use_selenium)
+            scraped_data.append(page_data)
+            
+            # Small delay between requests
+            if i < len(urls) - 1:
+                time.sleep(0.5)
+        
+        # Save data
+        scraper.scraped_data = scraped_data
+        csv_file = scraper.save_to_csv()
+        json_file = scraper.save_to_json()
+        
+        # Generate insights if requested
+        insights = None
+        if generate_insights:
+            insights = scraper.analyze_scraped_data(scraped_data, os.getenv('GEMINI_API_KEY'))
+        
+        # Calculate summary
+        total_pages = len(scraped_data)
+        successful_pages = len([p for p in scraped_data if 'error' not in p])
+        error_pages = total_pages - successful_pages
+        
+        return jsonify({
+            "status": "success",
+            "summary": {
+                "total_pages": total_pages,
+                "successful_pages": successful_pages,
+                "error_pages": error_pages,
+                "csv_file": csv_file,
+                "json_file": json_file
+            },
+            "scraped_data": scraped_data,
+            "insights": insights
+        })
+        
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
